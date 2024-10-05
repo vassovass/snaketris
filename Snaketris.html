@@ -109,12 +109,17 @@
             <ul>
                 <li><strong>Move Left/Right:</strong> A / D</li>
                 <li><strong>Rotate:</strong> W (Clockwise) / Q (Counter-clockwise)</li>
-                <li><strong>Soft Drop:</strong> S (Press once; holding does not increase speed)</li>
+                <li><strong>Soft Drop:</strong> Hold S (Speed increases over time)</li>
             </ul>
             <h3>Gameplay Mechanics</h3>
             <ul>
+                <li>Tetris blocks change shape every time a new block comes down.</li>
+                <li>Holding down 'S' key increases the Tetris block's drop speed. After holding for more than 2 seconds,
+                    the drop speed increases exponentially.</li>
                 <li>The Tetris block drop speed increases by 1% each time a block is placed.</li>
                 <li>The speed resets to the initial value when a new game starts.</li>
+                <li>If the snake collides with Tetris blocks, the game ends.</li>
+                <li>Any consecutive horizontal line of 12 blocks or more will disappear and earn you points.</li>
                 <li>Collect power-ups with the snake:</li>
                 <ul>
                     <li><strong>Up Arrow (↑):</strong> Increases snake length by 20% and adds 2 points.</li>
@@ -217,6 +222,15 @@
             ]
         ];
 
+        let tetrominoBag = [];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         let tetrominoPlayer = {
             pos: { x: 0, y: 0 },
             matrix: null,
@@ -226,7 +240,11 @@
         };
 
         function tetrominoReset() {
-            tetrominoPlayer.matrix = tetrominoes[Math.floor(Math.random() * tetrominoes.length)];
+            if (tetrominoBag.length === 0) {
+                tetrominoBag = tetrominoes.slice();
+                shuffle(tetrominoBag);
+            }
+            tetrominoPlayer.matrix = tetrominoBag.pop();
             tetrominoPlayer.pos.y = 0;
             tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
             tetrominoPlayer.color = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
@@ -262,6 +280,8 @@
             lastTime = 0;
             dropCounter = 0;
             snakeMoveCounter = 0;
+            sKeyDown = false;
+            sKeyHoldTime = 0;
             generatePowerUps();
             requestAnimationFrame(update);
         }
@@ -306,6 +326,9 @@
         const alertBox = document.getElementById('alertBox');
         let alertTimeout;
 
+        let sKeyDown = false;
+        let sKeyHoldTime = 0;
+
         document.addEventListener('keydown', event => {
             if (gameOver) return;
 
@@ -338,12 +361,23 @@
                 tetrominoMove(-1);
             } else if (event.key.toLowerCase() === 'd') {
                 tetrominoMove(1);
-            } else if (event.key.toLowerCase() === 's') {
-                tetrominoDrop();
             } else if (event.key.toLowerCase() === 'w') {
                 rotate(tetrominoPlayer.matrix, 1);
             } else if (event.key.toLowerCase() === 'q') {
                 rotate(tetrominoPlayer.matrix, -1);
+            } else if (event.key.toLowerCase() === 's') {
+                if (!sKeyDown) {
+                    sKeyDown = true;
+                    sKeyHoldTime = 0;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', event => {
+            if (event.key.toLowerCase() === 's') {
+                sKeyDown = false;
+                sKeyHoldTime = 0;
+                dropInterval = tetrominoPlayer.speed; // Reset drop interval to normal
             }
         });
 
@@ -410,7 +444,21 @@
             lastTime = time;
 
             dropCounter += deltaTime;
-            dropInterval = tetrominoPlayer.speed;
+
+            if (sKeyDown) {
+                sKeyHoldTime += deltaTime;
+                if (sKeyHoldTime > 2000) {
+                    // For every additional second, increase speed exponentially
+                    let extraTime = sKeyHoldTime - 2000;
+                    let speedMultiplier = Math.pow(2, extraTime / 1000); // Exponential increase
+                    dropInterval = tetrominoPlayer.speed / speedMultiplier;
+                } else {
+                    dropInterval = tetrominoPlayer.speed / 2; // Standard soft drop speed
+                }
+            } else {
+                dropInterval = tetrominoPlayer.speed;
+            }
+
             if (dropCounter > dropInterval) {
                 tetrominoDrop();
             }
@@ -532,16 +580,26 @@
 
         function sweep() {
             let linesCleared = 0;
-            outer: for (let y = grid.length - 1; y >= 0; --y) {
-                for (let x = 0; x < grid[y].length; ++x) {
-                    if (grid[y][x] === 0) {
-                        continue outer;
+            for (let y = grid.length - 1; y >= 0; --y) {
+                let x = 0;
+                while (x < grid[y].length) {
+                    if (grid[y][x] !== 0) {
+                        let runLength = 1;
+                        while (x + runLength < grid[y].length && grid[y][x + runLength] !== 0) {
+                            runLength++;
+                        }
+                        if (runLength >= 12) {
+                            // Remove blocks from x to x + runLength - 1
+                            for (let k = x; k < x + runLength; k++) {
+                                grid[y][k] = 0;
+                            }
+                            linesCleared++;
+                        }
+                        x += runLength;
+                    } else {
+                        x++;
                     }
                 }
-                const row = grid.splice(y, 1)[0].fill(0);
-                grid.unshift(row);
-                ++y;
-                linesCleared++;
             }
             return linesCleared;
         }
@@ -652,7 +710,8 @@
             }
         }
 
-        // Score Board Management
+        // Score Board Management (Local Storage Version)
+        /*
         function updateScoreBoard() {
             const totalScore = tetrominoPlayer.score + snakeScore;
             const date = new Date().toLocaleDateString();
@@ -686,8 +745,59 @@
                 scoreTableBody.appendChild(newRow);
             });
         }
+        */
 
-        // Start the game on page load
+        // Score Board Management (Server Version)
+        function updateScoreBoard() {
+            const totalScore = tetrominoPlayer.score + snakeScore;
+            const date = new Date().toLocaleDateString();
+
+            const newScore = { name: playerName, score: totalScore, date: date };
+
+            fetch('save_score.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newScore)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Score saved:', data);
+                })
+                .catch(error => {
+                    console.error('Error saving score:', error);
+                });
+        }
+
+        function loadScoreBoard() {
+            fetch('load_scores.php')
+                .then(response => response.json())
+                .then(scores => {
+                    const scoreTableBody = document.querySelector('#scoreTable tbody');
+                    scoreTableBody.innerHTML = ''; // Clear existing scores
+                    scores.forEach(score => {
+                        const newRow = document.createElement('tr');
+
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = score.name;
+                        newRow.appendChild(nameCell);
+
+                        const scoreCell = document.createElement('td');
+                        scoreCell.textContent = score.score;
+                        newRow.appendChild(scoreCell);
+
+                        const dateCell = document.createElement('td');
+                        dateCell.textContent = score.date;
+                        newRow.appendChild(dateCell);
+
+                        scoreTableBody.appendChild(newRow);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading scores:', error);
+                });
+        }
+
+        // Start the game when "Start Game" button is clicked
         // resetGame();
     </script>
 </body>
