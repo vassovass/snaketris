@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tetris Snake Mashup</title>
+    <style>
+        body {
+            background: #000;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #111;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas" width="300" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const context = canvas.getContext('2d');
+
+        const gridWidth = 10;
+        const gridHeight = 20;
+        const blockSize = 30;
+
+        canvas.width = gridWidth * blockSize;
+        canvas.height = gridHeight * blockSize;
+
+        let grid = createMatrix(gridWidth, gridHeight);
+
+        function createMatrix(w, h) {
+            const matrix = [];
+            while (h--) {
+                matrix.push(new Array(w).fill(0));
+            }
+            return matrix;
+        }
+
+        const tetrominoes = [
+            [
+                [1, 1, 1, 1]
+            ],
+            [
+                [2, 0, 0],
+                [2, 2, 2]
+            ],
+            [
+                [0, 0, 3],
+                [3, 3, 3]
+            ],
+            [
+                [4, 4],
+                [4, 4]
+            ],
+            [
+                [0, 5, 5],
+                [5, 5, 0]
+            ],
+            [
+                [0, 6, 0],
+                [6, 6, 6]
+            ],
+            [
+                [7, 7, 0],
+                [0, 7, 7]
+            ]
+        ];
+
+        const colors = [
+            null,
+            '#FF0D72', // I
+            '#0DC2FF', // J
+            '#0DFF72', // L
+            '#F538FF', // O
+            '#FF8E0D', // S
+            '#FFE138', // T
+            '#3877FF', // Z
+            '#FFFFFF'  // Snake
+        ];
+
+        const tetrominoPlayer = {
+            pos: { x: 0, y: 0 },
+            matrix: null
+        };
+
+        function tetrominoReset() {
+            tetrominoPlayer.matrix = tetrominoes[Math.floor(Math.random() * tetrominoes.length)];
+            tetrominoPlayer.pos.y = 0;
+            tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
+            if (collide(grid, tetrominoPlayer)) {
+                grid.forEach(row => row.fill(0));
+                gameOver = true;
+                console.error('Error Code 101: Tetromino cannot be placed. Game Over.');
+            }
+        }
+        tetrominoReset();
+
+        let snake = [{ x: Math.floor(gridWidth / 2), y: gridHeight - 1 }];
+        let snakeDirection = { x: 0, y: 0 };
+        let snakeNewDirection = { x: 0, y: 0 };
+
+        document.addEventListener('keydown', event => {
+            console.log('Key pressed:', event.keyCode);
+            if (event.keyCode === 37) { // Left arrow
+                snakeNewDirection = { x: -1, y: 0 };
+            } else if (event.keyCode === 38) { // Up arrow
+                snakeNewDirection = { x: 0, y: -1 };
+            } else if (event.keyCode === 39) { // Right arrow
+                snakeNewDirection = { x: 1, y: 0 };
+            } else if (event.keyCode === 40) { // Down arrow
+                snakeNewDirection = { x: 0, y: 1 };
+            } else if (event.keyCode === 81) { // Q
+                rotate(tetrominoPlayer.matrix, -1);
+            } else if (event.keyCode === 87) { // W
+                rotate(tetrominoPlayer.matrix, 1);
+            } else if (event.keyCode === 65) { // A
+                tetrominoMove(-1);
+            } else if (event.keyCode === 68) { // D
+                tetrominoMove(1);
+            } else if (event.keyCode === 83) { // S
+                tetrominoDrop();
+            }
+        });
+
+        function tetrominoMove(dir) {
+            tetrominoPlayer.pos.x += dir;
+            if (collide(grid, tetrominoPlayer)) {
+                tetrominoPlayer.pos.x -= dir;
+                console.warn('Warning Code 201: Collision detected when moving tetromino.');
+            }
+        }
+
+        function tetrominoDrop() {
+            tetrominoPlayer.pos.y++;
+            if (collide(grid, tetrominoPlayer)) {
+                tetrominoPlayer.pos.y--;
+                merge(grid, tetrominoPlayer);
+                tetrominoReset();
+                sweep();
+            }
+            dropCounter = 0;
+        }
+
+        function rotate(matrix, dir) {
+            const rotatedMatrix = JSON.parse(JSON.stringify(matrix));
+            for (let y = 0; y < rotatedMatrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [rotatedMatrix[x][y], rotatedMatrix[y][x]] = [rotatedMatrix[y][x], rotatedMatrix[x][y]];
+                }
+            }
+            if (dir > 0) {
+                rotatedMatrix.forEach(row => row.reverse());
+            } else {
+                rotatedMatrix.reverse();
+            }
+
+            const pos = tetrominoPlayer.pos.x;
+            let offset = 1;
+            while (collide(grid, { pos: tetrominoPlayer.pos, matrix: rotatedMatrix })) {
+                tetrominoPlayer.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > tetrominoPlayer.matrix[0].length) {
+                    rotate(rotatedMatrix, -dir);
+                    tetrominoPlayer.pos.x = pos;
+                    console.error('Error Code 301: Rotation not possible due to collision.');
+                    return;
+                }
+            }
+            tetrominoPlayer.matrix = rotatedMatrix;
+        }
+
+        let gameOver = false;
+        let dropCounter = 0;
+        let dropInterval = 1000; // milliseconds
+
+        let snakeMoveCounter = 0;
+        let snakeMoveInterval = 200; // milliseconds
+
+        let lastTime = 0;
+
+        function update(time = 0) {
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            dropCounter += deltaTime;
+            if (dropCounter > dropInterval) {
+                tetrominoDrop();
+            }
+
+            snakeMoveCounter += deltaTime;
+            if (snakeMoveCounter > snakeMoveInterval) {
+                snakeMoveCounter = 0;
+                if (snakeNewDirection.x !== -snakeDirection.x || snakeNewDirection.y !== -snakeDirection.y) {
+                    snakeDirection = snakeNewDirection;
+                }
+                const snakeHead = { x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y };
+                if (
+                    snakeHead.x < 0 ||
+                    snakeHead.x >= gridWidth ||
+                    snakeHead.y < 0 ||
+                    snakeHead.y >= gridHeight ||
+                    grid[snakeHead.y][snakeHead.x] !== 0
+                ) {
+                    gameOver = true;
+                    console.error('Error Code 401: Snake collision detected. Game Over.');
+                } else {
+                    snake.unshift(snakeHead);
+                    snake.pop();
+                }
+            }
+
+            draw();
+            if (!gameOver) {
+                requestAnimationFrame(update);
+            } else {
+                alert('Game Over');
+                console.log('Game Over triggered');
+            }
+        }
+        requestAnimationFrame(update);
+
+        function collide(grid, player) {
+            const m = player.matrix;
+            const o = player.pos;
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (
+                        m[y][x] !== 0 &&
+                        (grid[y + o.y] && grid[y + o.y][x + o.x]) !== 0
+                    ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge(grid, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        if (grid[y + player.pos.y] && grid[y + player.pos.y][x + player.pos.x] !== undefined) {
+                            grid[y + player.pos.y][x + player.pos.x] = value;
+                        } else {
+                            console.error('Error Code 501: Merge out of bounds.');
+                        }
+                    }
+                });
+            });
+        }
+
+        function sweep() {
+            outer: for (let y = grid.length - 1; y >= 0; --y) {
+                for (let x = 0; x < grid[y].length; ++x) {
+                    if (grid[y][x] === 0) {
+                        continue outer;
+                    }
+                }
+                const row = grid.splice(y, 1)[0].fill(0);
+                grid.unshift(row);
+                ++y;
+            }
+        }
+
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawMatrix(grid, { x: 0, y: 0 });
+            drawMatrix(tetrominoPlayer.matrix, tetrominoPlayer.pos);
+
+            // Draw snake
+            snake.forEach(segment => {
+                context.fillStyle = colors[8]; // Snake color
+                context.fillRect(segment.x * blockSize, segment.y * blockSize, blockSize, blockSize);
+            });
+        }
+
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = colors[value];
+                        context.fillRect(
+                            (x + offset.x) * blockSize,
+                            (y + offset.y) * blockSize,
+                            blockSize,
+                            blockSize
+                        );
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
