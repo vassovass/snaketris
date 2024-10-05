@@ -29,6 +29,8 @@
             width: 90%;
             max-width: 1200px;
             text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         #scoreBoard table {
@@ -84,6 +86,18 @@
             padding: 10px 20px;
             font-size: 16px;
         }
+
+        #alertBox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-size: 18px;
+        }
     </style>
 </head>
 
@@ -137,6 +151,9 @@
         </div>
     </div>
 
+    <!-- Alert Box -->
+    <div id="alertBox"></div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const context = canvas.getContext('2d');
@@ -174,28 +191,28 @@
                 [1, 1, 1, 1]
             ],
             [
-                [2, 0, 0],
-                [2, 2, 2]
+                [1, 0, 0],
+                [1, 1, 1]
             ],
             [
-                [0, 0, 3],
-                [3, 3, 3]
+                [0, 0, 1],
+                [1, 1, 1]
             ],
             [
-                [4, 4],
-                [4, 4]
+                [1, 1],
+                [1, 1]
             ],
             [
-                [0, 5, 5],
-                [5, 5, 0]
+                [0, 1, 1],
+                [1, 1, 0]
             ],
             [
-                [0, 6, 0],
-                [6, 6, 6]
+                [0, 1, 0],
+                [1, 1, 1]
             ],
             [
-                [7, 7, 0],
-                [0, 7, 7]
+                [1, 1, 0],
+                [0, 1, 1]
             ]
         ];
 
@@ -212,9 +229,6 @@
             tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
             tetrominoPlayer.color = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
 
-            // Change matrix values to 1 for drawing
-            tetrominoPlayer.matrix = tetrominoPlayer.matrix.map(row => row.map(val => val > 0 ? 1 : 0));
-
             if (collide(grid, tetrominoPlayer)) {
                 gameOver = true;
                 updateScoreBoard();
@@ -226,19 +240,25 @@
         let snakeDirection = { x: 0, y: -1 }; // Starts moving upwards
         let snakeNewDirection = { x: 0, y: -1 };
         let snakeScore = 0;
+        let snakeLength = 5; // Initial snake length
+
+        let powerUps = []; // Array to hold power-up icons
 
         function resetGame() {
             grid = createMatrix(gridWidth, gridHeight);
             tetrominoPlayer.score = 0;
             snakeScore = 0;
+            snakeLength = 5;
             tetrominoReset();
             snake = [{ x: Math.floor(gridWidth / 2), y: gridHeight - 1 }];
             snakeDirection = { x: 0, y: -1 };
             snakeNewDirection = { x: 0, y: -1 };
+            powerUps = [];
             gameOver = false;
             lastTime = 0;
             dropCounter = 0;
             snakeMoveCounter = 0;
+            generatePowerUps();
             requestAnimationFrame(update);
         }
 
@@ -264,8 +284,17 @@
             instructionsModal.style.display = 'none';
         });
 
+        // Alert Box
+        const alertBox = document.getElementById('alertBox');
+        let alertTimeout;
+
         document.addEventListener('keydown', event => {
             if (gameOver) return;
+
+            // Prevent holding down 'S' key from causing exponential drops
+            if (event.repeat && (event.key.toLowerCase() === 's')) {
+                return;
+            }
 
             // Snake Controls - Arrow Keys
             if (event.key === 'ArrowLeft') {
@@ -370,6 +399,14 @@
                     snakeDirection = snakeNewDirection;
                 }
                 const snakeHead = { x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y };
+
+                // Proximity Alert
+                if (isNearCollision(snakeHead)) {
+                    showAlert('Warning: Snake is near collision!');
+                } else {
+                    hideAlert();
+                }
+
                 if (
                     snakeHead.x < 0 ||
                     snakeHead.x >= gridWidth ||
@@ -383,11 +420,12 @@
                     alert('Game Over! Snake collision detected.');
                 } else {
                     snake.unshift(snakeHead);
-                    if (snake.length > 5) {
+                    if (snake.length > snakeLength) {
                         snake.pop();
                     } else {
                         snakeScore += 1;
                     }
+                    checkPowerUpCollision(snakeHead);
                 }
             }
 
@@ -395,6 +433,43 @@
             if (!gameOver) {
                 requestAnimationFrame(update);
             }
+        }
+
+        function isNearCollision(head) {
+            // Check if the snake is near the walls or Tetris blocks
+            const directions = [
+                { x: -1, y: 0 },
+                { x: 1, y: 0 },
+                { x: 0, y: -1 },
+                { x: 0, y: 1 }
+            ];
+            for (let dir of directions) {
+                const x = head.x + dir.x;
+                const y = head.y + dir.y;
+                if (
+                    x < 0 ||
+                    x >= gridWidth ||
+                    y < 0 ||
+                    y >= gridHeight ||
+                    grid[y][x] !== 0
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function showAlert(message) {
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+            clearTimeout(alertTimeout);
+            alertTimeout = setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 2000);
+        }
+
+        function hideAlert() {
+            alertBox.style.display = 'none';
         }
 
         function snakeCollision(head) {
@@ -455,6 +530,17 @@
             drawMatrix(grid, { x: 0, y: 0 });
             drawMatrix(tetrominoPlayer.matrix, tetrominoPlayer.pos, tetrominoPlayer.color);
 
+            // Draw power-ups
+            powerUps.forEach(powerUp => {
+                context.fillStyle = powerUp.color;
+                context.fillRect(powerUp.x * blockSize, powerUp.y * blockSize, blockSize, blockSize);
+                context.fillStyle = '#000';
+                context.font = '20px Arial';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(powerUp.symbol, (powerUp.x + 0.5) * blockSize, (powerUp.y + 0.5) * blockSize);
+            });
+
             // Draw snake
             snake.forEach((segment, index) => {
                 context.fillStyle = index === 0 ? '#FFD700' : '#FFFFFF'; // Head is gold, body is white
@@ -482,6 +568,61 @@
                     }
                 });
             });
+        }
+
+        // Power-Up Functions
+        function generatePowerUps() {
+            powerUps = [];
+            const types = [
+                { symbol: '↑', effect: 'increase', color: '#00FF00' },
+                { symbol: '↓', effect: 'decrease', color: '#FF0000' },
+                { symbol: '?', effect: 'random', color: '#FFFF00' }
+            ];
+            for (let i = 0; i < 5; i++) {
+                let powerUp;
+                do {
+                    powerUp = {
+                        x: Math.floor(Math.random() * gridWidth),
+                        y: Math.floor(Math.random() * gridHeight),
+                        ...types[Math.floor(Math.random() * types.length)]
+                    };
+                } while (
+                    grid[powerUp.y][powerUp.x] !== 0 ||
+                    snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y)
+                );
+                powerUps.push(powerUp);
+            }
+        }
+
+        function checkPowerUpCollision(head) {
+            for (let i = 0; i < powerUps.length; i++) {
+                if (head.x === powerUps[i].x && head.y === powerUps[i].y) {
+                    applyPowerUp(powerUps[i]);
+                    powerUps.splice(i, 1);
+                    // Generate a new power-up
+                    generatePowerUps();
+                    break;
+                }
+            }
+        }
+
+        function applyPowerUp(powerUp) {
+            if (powerUp.effect === 'increase') {
+                snakeLength = Math.ceil(snakeLength * 1.2);
+                showAlert('Snake length increased by 20%!');
+            } else if (powerUp.effect === 'decrease') {
+                snakeLength = Math.floor(snakeLength * 0.7);
+                showAlert('Snake length decreased by 30%!');
+            } else if (powerUp.effect === 'random') {
+                const randomEffect = Math.random() < 0.5 ? 'increase' : 'decrease';
+                if (randomEffect === 'increase') {
+                    snakeLength = Math.ceil(snakeLength * 1.2);
+                    showAlert('Snake length increased by 20%!');
+                } else {
+                    snakeLength = Math.floor(snakeLength * 0.7);
+                    showAlert('Snake length decreased by 30%!');
+                }
+            }
         }
 
         // Score Board Management
