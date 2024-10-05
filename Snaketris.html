@@ -26,7 +26,8 @@
 
         #scoreBoard {
             margin: 0 auto;
-            width: 300px;
+            width: 90%;
+            max-width: 1200px;
             text-align: left;
         }
 
@@ -41,9 +42,10 @@
             padding: 5px;
         }
 
-        #restartButton {
-            display: block;
-            margin: 10px auto;
+        #restartButton,
+        #instructionsButton {
+            display: inline-block;
+            margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
         }
@@ -55,10 +57,32 @@
             font-size: 16px;
         }
 
-        #instructions {
-            margin: 20px auto;
-            width: 300px;
-            text-align: left;
+        #instructionsModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #instructionsContent {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        #closeInstructions {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -66,19 +90,11 @@
 <body>
     <div id="gameInfo">
         <h1>Tetris Snake Mashup</h1>
-        <canvas id="gameCanvas" width="300" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
         <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
-        <button id="restartButton">Start Game</button>
-        <div id="instructions">
-            <h2>Instructions</h2>
-            <p><strong>Snake Controls:</strong> Arrow Keys</p>
-            <p><strong>Tetris Controls:</strong></p>
-            <ul>
-                <li><strong>Move Left/Right:</strong> A / D</li>
-                <li><strong>Rotate:</strong> W (Clockwise) / Q (Counter-clockwise)</li>
-                <li><strong>Soft Drop:</strong> S</li>
-            </ul>
-            <p>Avoid collisions between the snake and the Tetris blocks.</p>
+        <div>
+            <button id="restartButton">Start Game</button>
+            <button id="instructionsButton">Instructions</button>
         </div>
         <div id="scoreBoard">
             <h2>Score Board</h2>
@@ -96,11 +112,36 @@
             </table>
         </div>
     </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal">
+        <div id="instructionsContent">
+            <h2>Instructions</h2>
+            <p><strong>Objective:</strong> Control both the snake and Tetris blocks simultaneously. Avoid collisions
+                between the snake and Tetris blocks. Clear lines with Tetris blocks to earn points. Keep the snake alive
+                to increase your snake score.</p>
+            <h3>Controls</h3>
+            <p><strong>Snake Controls:</strong> Arrow Keys</p>
+            <p><strong>Tetris Controls:</strong></p>
+            <ul>
+                <li><strong>Move Left/Right:</strong> A / D</li>
+                <li><strong>Rotate:</strong> W (Clockwise) / Q (Counter-clockwise)</li>
+                <li><strong>Soft Drop:</strong> S</li>
+            </ul>
+            <h3>Game Over Conditions</h3>
+            <ul>
+                <li>Snake collides with walls, Tetris blocks, or itself.</li>
+                <li>Tetris blocks reach the top and cannot be placed.</li>
+            </ul>
+            <button id="closeInstructions">Close</button>
+        </div>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const context = canvas.getContext('2d');
 
-        const gridWidth = 10;
+        const gridWidth = 40; // 4 times wider
         const gridHeight = 20;
         const blockSize = 30;
 
@@ -116,6 +157,17 @@
             }
             return matrix;
         }
+
+        // Rainbow colors for Tetris blocks
+        const rainbowColors = [
+            '#FF0000', // Red
+            '#FF7F00', // Orange
+            '#FFFF00', // Yellow
+            '#00FF00', // Green
+            '#0000FF', // Blue
+            '#4B0082', // Indigo
+            '#9400D3'  // Violet
+        ];
 
         const tetrominoes = [
             [
@@ -147,28 +199,22 @@
             ]
         ];
 
-        const colors = [
-            null,
-            '#FF0D72', // I
-            '#0DC2FF', // J
-            '#0DFF72', // L
-            '#F538FF', // O
-            '#FF8E0D', // S
-            '#FFE138', // T
-            '#3877FF', // Z
-            '#FFFFFF'  // Snake
-        ];
-
-        const tetrominoPlayer = {
+        let tetrominoPlayer = {
             pos: { x: 0, y: 0 },
             matrix: null,
-            score: 0
+            score: 0,
+            color: '#FFFFFF' // Default color
         };
 
         function tetrominoReset() {
             tetrominoPlayer.matrix = tetrominoes[Math.floor(Math.random() * tetrominoes.length)];
             tetrominoPlayer.pos.y = 0;
             tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
+            tetrominoPlayer.color = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+
+            // Change matrix values to 1 for drawing
+            tetrominoPlayer.matrix = tetrominoPlayer.matrix.map(row => row.map(val => val > 0 ? 1 : 0));
+
             if (collide(grid, tetrominoPlayer)) {
                 gameOver = true;
                 updateScoreBoard();
@@ -205,18 +251,39 @@
             resetGame();
         });
 
+        // Instructions Modal
+        const instructionsButton = document.getElementById('instructionsButton');
+        const instructionsModal = document.getElementById('instructionsModal');
+        const closeInstructions = document.getElementById('closeInstructions');
+
+        instructionsButton.addEventListener('click', () => {
+            instructionsModal.style.display = 'flex';
+        });
+
+        closeInstructions.addEventListener('click', () => {
+            instructionsModal.style.display = 'none';
+        });
+
         document.addEventListener('keydown', event => {
             if (gameOver) return;
 
             // Snake Controls - Arrow Keys
             if (event.key === 'ArrowLeft') {
-                snakeNewDirection = { x: -1, y: 0 };
+                if (snakeDirection.x !== 1) {
+                    snakeNewDirection = { x: -1, y: 0 };
+                }
             } else if (event.key === 'ArrowUp') {
-                snakeNewDirection = { x: 0, y: -1 };
+                if (snakeDirection.y !== 1) {
+                    snakeNewDirection = { x: 0, y: -1 };
+                }
             } else if (event.key === 'ArrowRight') {
-                snakeNewDirection = { x: 1, y: 0 };
+                if (snakeDirection.x !== -1) {
+                    snakeNewDirection = { x: 1, y: 0 };
+                }
             } else if (event.key === 'ArrowDown') {
-                snakeNewDirection = { x: 0, y: 1 };
+                if (snakeDirection.y !== -1) {
+                    snakeNewDirection = { x: 0, y: 1 };
+                }
             }
 
             // Tetris Controls - WASD
@@ -253,18 +320,22 @@
         }
 
         function rotate(matrix, dir) {
-            const rotatedMatrix = matrix.map((row, y) =>
-                row.map((val, x) => matrix[matrix.length - x - 1][y])
-            );
+            // Transpose the matrix
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            // Reverse the rows for clockwise or columns for counter-clockwise rotation
             if (dir > 0) {
-                matrix = rotatedMatrix;
+                matrix.forEach(row => row.reverse());
             } else {
-                matrix = rotatedMatrix.map(row => row.reverse());
+                matrix.reverse();
             }
 
             const pos = tetrominoPlayer.pos.x;
             let offset = 1;
-            while (collide(grid, { pos: tetrominoPlayer.pos, matrix })) {
+            while (collide(grid, tetrominoPlayer)) {
                 tetrominoPlayer.pos.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
                 if (offset > matrix[0].length) {
@@ -272,7 +343,6 @@
                     return;
                 }
             }
-            tetrominoPlayer.matrix = matrix;
         }
 
         let gameOver = false;
@@ -305,7 +375,8 @@
                     snakeHead.x >= gridWidth ||
                     snakeHead.y < 0 ||
                     snakeHead.y >= gridHeight ||
-                    grid[snakeHead.y][snakeHead.x] !== 0
+                    grid[snakeHead.y][snakeHead.x] !== 0 ||
+                    snakeCollision(snakeHead)
                 ) {
                     gameOver = true;
                     updateScoreBoard();
@@ -324,6 +395,15 @@
             if (!gameOver) {
                 requestAnimationFrame(update);
             }
+        }
+
+        function snakeCollision(head) {
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         function collide(grid, player) {
@@ -373,11 +453,11 @@
             context.fillRect(0, 0, canvas.width, canvas.height);
 
             drawMatrix(grid, { x: 0, y: 0 });
-            drawMatrix(tetrominoPlayer.matrix, tetrominoPlayer.pos);
+            drawMatrix(tetrominoPlayer.matrix, tetrominoPlayer.pos, tetrominoPlayer.color);
 
             // Draw snake
-            snake.forEach(segment => {
-                context.fillStyle = colors[8]; // Snake color
+            snake.forEach((segment, index) => {
+                context.fillStyle = index === 0 ? '#FFD700' : '#FFFFFF'; // Head is gold, body is white
                 context.fillRect(segment.x * blockSize, segment.y * blockSize, blockSize, blockSize);
             });
 
@@ -388,11 +468,11 @@
             context.fillText(`Snake Score: ${snakeScore}`, 10, 40);
         }
 
-        function drawMatrix(matrix, offset) {
+        function drawMatrix(matrix, offset, color) {
             matrix.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
-                        context.fillStyle = colors[value];
+                        context.fillStyle = color || '#FFFFFF';
                         context.fillRect(
                             (x + offset.x) * blockSize,
                             (y + offset.y) * blockSize,
@@ -424,9 +504,6 @@
 
             scoreTableBody.appendChild(newRow);
         }
-
-        // Start the game on load
-        // resetGame();
     </script>
 </body>
 
