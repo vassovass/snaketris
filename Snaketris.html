@@ -224,6 +224,7 @@
             <p>Control both the snake and Tetris blocks simultaneously. Avoid collisions between the snake and Tetris
                 blocks, including the falling block. Clear lines with Tetris blocks to earn points. Keep the snake alive
                 to increase your snake score.</p>
+
             <h3>Controls</h3>
             <ul>
                 <li><strong>Snake Controls:</strong> Mouse Pointer (keep the mouse over the game area)</li>
@@ -237,43 +238,72 @@
                     </ul>
                 </li>
             </ul>
+
             <h3>Gameplay Mechanics</h3>
+            <h4>Tetris Rules</h4>
             <ul>
                 <li>Tetris blocks change shape every time a new block comes down.</li>
                 <li><strong>Ghost Piece:</strong> A shadow shows where the Tetris block will land if dropped directly
                     down.</li>
                 <li>Pressing the 'Soft Drop' key will drop the Tetris block by 5 rows.</li>
                 <li>The Tetris block drop speed increases by 5% each time a block is placed.</li>
-                <li>If the snake collides with any Tetris blocks (including the falling block), the game ends.</li>
                 <li>Any consecutive horizontal line of 12 blocks or more will disappear and earn you points.</li>
                 <li><strong>Line Completion Indicators:</strong> If there are 6 or more horizontal blocks together,
                     numbers indicate how many more blocks are needed to clear the line. These numbers are shown on the
                     outer blocks of the line.</li>
-                <li>Collect power-ups with the snake:</li>
-                <ul>
-                    <li><strong>Up Arrow (↑):</strong> Increases snake length by 20% and adds 2 points.</li>
-                    <li><strong>Down Arrow (↓):</strong> Decreases snake length by 30% and subtracts 1 point.</li>
-                    <li><strong>Question Mark (?):</strong> Randomly increases or decreases snake length.</li>
-                    <li><strong>Side Warp (⇄):</strong> Allows snake to wrap around side walls for 30 seconds.</li>
-                    <li><strong>Vertical Warp (⇅):</strong> Allows snake to wrap around top and bottom walls for 30
-                        seconds.</li>
-                    <li><strong>Full Warp (⤡):</strong> Allows snake to wrap around all walls for 30 seconds.</li>
-                </ul>
-                <li>Only one warp power-up can be on the screen at a time.</li>
-                <li>Warp power-ups appear only after 1.5 minutes have passed since the previous warp effect ended.</li>
+            </ul>
+
+            <h4>Snake Rules</h4>
+            <ul>
+                <li>Control the snake using the mouse pointer.</li>
+                <li>The snake moves towards the mouse pointer but cannot reverse direction directly.</li>
+                <li>Collect power-ups to alter the snake's length and abilities.</li>
+                <li>Avoid colliding with walls (unless warp power-up is active), Tetris blocks (including the falling
+                    block), or itself.</li>
+            </ul>
+
+            <h3>How to Increase Your Score</h3>
+            <ul>
+                <li><strong>Tetris Score:</strong> Earn points by clearing lines with Tetris blocks. Each line cleared
+                    gives you 10 points.</li>
+                <li><strong>Snake Score:</strong> Increase your snake score by surviving longer and collecting
+                    power-ups.</li>
+            </ul>
+
+            <h3>Power-Ups Key</h3>
+            <ul>
+                <li><span style="color: #FFA500;">&#x2191;</span> <strong>Up Arrow (↑):</strong> Increases snake length
+                    by 20% and adds 2 points.</li>
+                <li><span style="color: #FF0000;">&#x2193;</span> <strong>Down Arrow (↓):</strong> Decreases snake
+                    length by 30% and subtracts 1 point.</li>
+                <li><span style="color: #FFFF00;">?</span> <strong>Question Mark (?):</strong> Randomly increases or
+                    decreases snake length.</li>
+            </ul>
+
+            <h3>Warp Power-Ups</h3>
+            <ul>
+                <li><span style="color: #008000;">&#x21C4;</span> <strong>Side Warp (⇄):</strong> Allows snake to wrap
+                    around side walls for 30 seconds.</li>
+                <li><span style="color: #00A000;">&#x21C5;</span> <strong>Vertical Warp (⇅):</strong> Allows snake to
+                    wrap around top and bottom walls for 30 seconds.</li>
+                <li><span style="color: #00C000;">&#x2941;</span> <strong>Full Warp (⤡):</strong> Allows snake to wrap
+                    around all walls for 30 seconds.</li>
+            </ul>
+
+            <h3>Warnings</h3>
+            <ul>
                 <li>An alert appears when the snake is near collision with walls, Tetris blocks, or the mouse pointer.
                 </li>
                 <li>A warning appears if the mouse pointer leaves the game area during play.</li>
-                <li>Customize key bindings for a personalized experience.</li>
-                <li>Adjust the snake's speed using the slider control.</li>
-                <li>Unlock achievements by reaching specific milestones!</li>
             </ul>
+
             <h3>Game Over Conditions</h3>
             <ul>
                 <li>Snake collides with walls (unless warp power-up is active), Tetris blocks (including the falling
                     block), or itself.</li>
                 <li>Tetris blocks reach the top and cannot be placed.</li>
             </ul>
+
             <button class="closeModal" id="closeInstructions">Close</button>
         </div>
     </div>
@@ -324,6 +354,8 @@
     </div>
 
     <script>
+        // JavaScript code for the game
+
         const canvas = document.getElementById('gameCanvas');
         const context = canvas.getContext('2d');
 
@@ -1081,6 +1113,7 @@
                         if (runLength >= 6 && runLength < 12) {
                             let blocksNeeded = 12 - runLength;
                             // Show numbers on outer blocks
+                            context.fillStyle = '#000';
                             context.fillText(blocksNeeded, (runStart + 0.5) * blockSize, (y + 0.5) * blockSize);
                             context.fillText(blocksNeeded, (x + runLength - 0.5) * blockSize, (y + 0.5) * blockSize);
                         }
