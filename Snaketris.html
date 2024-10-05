@@ -41,7 +41,9 @@
         }
 
         #instructionsModal,
-        #scoreBoardModal {
+        #scoreBoardModal,
+        #keyBindingsModal,
+        #achievementsModal {
             position: fixed;
             top: 0;
             left: 0;
@@ -55,7 +57,9 @@
         }
 
         #instructionsContent,
-        #scoreBoardContent {
+        #scoreBoardContent,
+        #keyBindingsContent,
+        #achievementsContent {
             background: #222;
             padding: 20px;
             border-radius: 10px;
@@ -81,6 +85,22 @@
             display: none;
             font-size: 18px;
         }
+
+        #controlsDiv {
+            margin: 20px;
+        }
+
+        #controlsDiv label {
+            display: inline-block;
+            width: 150px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        #controlsDiv input {
+            width: 50px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -92,7 +112,9 @@
         <div>
             <button id="restartButton">Start Game</button>
             <button id="instructionsButton">Instructions</button>
-            <button id="scoreBoardButton">Score Board</button>
+            <button id="scoreBoardButton">Leaderboard</button>
+            <button id="keyBindingsButton">Key Bindings</button>
+            <button id="achievementsButton">Achievements</button>
         </div>
     </div>
 
@@ -101,24 +123,31 @@
         <div id="instructionsContent">
             <h2>Instructions</h2>
             <p><strong>Objective:</strong> Control both the snake and Tetris blocks simultaneously. Avoid collisions
-                between the snake and Tetris blocks. Clear lines with Tetris blocks to earn points. Keep the snake alive
-                to increase your snake score.</p>
+                between
+                the snake and Tetris blocks, including the falling block. Clear lines with Tetris blocks to earn points.
+                Keep
+                the snake alive to increase your snake score.</p>
             <h3>Controls</h3>
-            <p><strong>Snake Controls:</strong> Arrow Keys</p>
+            <p><strong>Snake Controls:</strong> Arrow Keys or Mouse Pointer</p>
             <p><strong>Tetris Controls:</strong></p>
             <ul>
-                <li><strong>Move Left/Right:</strong> A / D</li>
-                <li><strong>Rotate:</strong> W (Clockwise) / Q (Counter-clockwise)</li>
-                <li><strong>Soft Drop:</strong> Hold S (Speed increases over time)</li>
+                <li><strong>Move Left/Right:</strong> <span id="leftKeyDisplay">A</span> / <span
+                        id="rightKeyDisplay">D</span>
+                </li>
+                <li><strong>Rotate:</strong> <span id="rotateCWKeyDisplay">W</span> (Clockwise) / <span
+                        id="rotateCCWKeyDisplay">Q</span> (Counter-clockwise)</li>
+                <li><strong>Soft Drop:</strong> Hold <span id="dropKeyDisplay">S</span> (Drops by blocks after holding)
+                </li>
             </ul>
             <h3>Gameplay Mechanics</h3>
             <ul>
                 <li>Tetris blocks change shape every time a new block comes down.</li>
-                <li>Holding down 'S' key increases the Tetris block's drop speed. After holding for more than 2 seconds,
-                    the drop speed increases exponentially.</li>
+                <li>Holding down the 'Soft Drop' key for 2 seconds will drop the Tetris block by 4 rows. For every
+                    additional
+                    second held, it drops another 4 rows.</li>
                 <li>The Tetris block drop speed increases by 1% each time a block is placed.</li>
                 <li>The speed resets to the initial value when a new game starts.</li>
-                <li>If the snake collides with Tetris blocks, the game ends.</li>
+                <li>If the snake collides with any Tetris blocks (including the falling block), the game ends.</li>
                 <li>Any consecutive horizontal line of 12 blocks or more will disappear and earn you points.</li>
                 <li>Collect power-ups with the snake:</li>
                 <ul>
@@ -127,10 +156,12 @@
                     <li><strong>Question Mark (?):</strong> Randomly increases or decreases snake length.</li>
                 </ul>
                 <li>An alert appears when the snake is near collision with walls or Tetris blocks.</li>
+                <li>Customize key bindings and control the snake with your mouse for a personalized experience.</li>
+                <li>Unlock achievements by reaching specific milestones!</li>
             </ul>
             <h3>Game Over Conditions</h3>
             <ul>
-                <li>Snake collides with walls, Tetris blocks, or itself.</li>
+                <li>Snake collides with walls, Tetris blocks (including the falling block), or itself.</li>
                 <li>Tetris blocks reach the top and cannot be placed.</li>
             </ul>
             <button class="closeModal" id="closeInstructions">Close</button>
@@ -140,7 +171,7 @@
     <!-- Score Board Modal -->
     <div id="scoreBoardModal">
         <div id="scoreBoardContent">
-            <h2>Score Board</h2>
+            <h2>Leaderboard</h2>
             <table id="scoreTable">
                 <thead>
                     <tr>
@@ -154,6 +185,48 @@
                 </tbody>
             </table>
             <button class="closeModal" id="closeScoreBoard">Close</button>
+        </div>
+    </div>
+
+    <!-- Key Bindings Modal -->
+    <div id="keyBindingsModal">
+        <div id="keyBindingsContent">
+            <h2>Customize Key Bindings</h2>
+            <div id="controlsDiv">
+                <div>
+                    <label for="leftKey">Move Left:</label>
+                    <input type="text" id="leftKey" maxlength="1" value="A">
+                </div>
+                <div>
+                    <label for="rightKey">Move Right:</label>
+                    <input type="text" id="rightKey" maxlength="1" value="D">
+                </div>
+                <div>
+                    <label for="rotateCWKey">Rotate CW:</label>
+                    <input type="text" id="rotateCWKey" maxlength="1" value="W">
+                </div>
+                <div>
+                    <label for="rotateCCWKey">Rotate CCW:</label>
+                    <input type="text" id="rotateCCWKey" maxlength="1" value="Q">
+                </div>
+                <div>
+                    <label for="dropKey">Soft Drop:</label>
+                    <input type="text" id="dropKey" maxlength="1" value="S">
+                </div>
+            </div>
+            <button id="saveKeyBindings">Save</button>
+            <button class="closeModal" id="closeKeyBindings">Close</button>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievementsModal">
+        <div id="achievementsContent">
+            <h2>Achievements</h2>
+            <ul id="achievementsList">
+                <!-- Achievements will be populated here -->
+            </ul>
+            <button class="closeModal" id="closeAchievements">Close</button>
         </div>
     </div>
 
@@ -280,8 +353,15 @@
             lastTime = 0;
             dropCounter = 0;
             snakeMoveCounter = 0;
-            sKeyDown = false;
-            sKeyHoldTime = 0;
+            dropKeyDown = false;
+            dropKeyHoldTime = 0;
+            achievements = {
+                'First Line Clear': false,
+                'Score 100 Points': false,
+                'Survive 5 Minutes': false
+            };
+            achievementsUnlocked = [];
+            gameStartTime = Date.now();
             generatePowerUps();
             requestAnimationFrame(update);
         }
@@ -301,6 +381,7 @@
         const closeInstructions = document.getElementById('closeInstructions');
 
         instructionsButton.addEventListener('click', () => {
+            updateKeyDisplay();
             instructionsModal.style.display = 'flex';
         });
 
@@ -322,63 +403,147 @@
             scoreBoardModal.style.display = 'none';
         });
 
+        // Key Bindings Modal
+        const keyBindingsButton = document.getElementById('keyBindingsButton');
+        const keyBindingsModal = document.getElementById('keyBindingsModal');
+        const closeKeyBindings = document.getElementById('closeKeyBindings');
+        const saveKeyBindings = document.getElementById('saveKeyBindings');
+
+        keyBindingsButton.addEventListener('click', () => {
+            keyBindingsModal.style.display = 'flex';
+        });
+
+        closeKeyBindings.addEventListener('click', () => {
+            keyBindingsModal.style.display = 'none';
+        });
+
+        saveKeyBindings.addEventListener('click', () => {
+            leftKey = document.getElementById('leftKey').value.toLowerCase();
+            rightKey = document.getElementById('rightKey').value.toLowerCase();
+            rotateCWKey = document.getElementById('rotateCWKey').value.toLowerCase();
+            rotateCCWKey = document.getElementById('rotateCCWKey').value.toLowerCase();
+            dropKey = document.getElementById('dropKey').value.toLowerCase();
+            updateKeyDisplay();
+            keyBindingsModal.style.display = 'none';
+        });
+
+        function updateKeyDisplay() {
+            document.getElementById('leftKeyDisplay').textContent = leftKey.toUpperCase();
+            document.getElementById('rightKeyDisplay').textContent = rightKey.toUpperCase();
+            document.getElementById('rotateCWKeyDisplay').textContent = rotateCWKey.toUpperCase();
+            document.getElementById('rotateCCWKeyDisplay').textContent = rotateCCWKey.toUpperCase();
+            document.getElementById('dropKeyDisplay').textContent = dropKey.toUpperCase();
+        }
+
+        // Achievements Modal
+        const achievementsButton = document.getElementById('achievementsButton');
+        const achievementsModal = document.getElementById('achievementsModal');
+        const closeAchievements = document.getElementById('closeAchievements');
+        const achievementsList = document.getElementById('achievementsList');
+
+        achievementsButton.addEventListener('click', () => {
+            loadAchievements();
+            achievementsModal.style.display = 'flex';
+        });
+
+        closeAchievements.addEventListener('click', () => {
+            achievementsModal.style.display = 'none';
+        });
+
+        function loadAchievements() {
+            achievementsList.innerHTML = '';
+            for (let [key, unlocked] of Object.entries(achievements)) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${key}: ${unlocked ? 'Unlocked' : 'Locked'}`;
+                achievementsList.appendChild(listItem);
+            }
+        }
+
         // Alert Box
         const alertBox = document.getElementById('alertBox');
         let alertTimeout;
 
-        let sKeyDown = false;
-        let sKeyHoldTime = 0;
+        let dropKeyDown = false;
+        let dropKeyHoldTime = 0;
+
+        // Default Key Bindings
+        let leftKey = 'a';
+        let rightKey = 'd';
+        let rotateCWKey = 'w';
+        let rotateCCWKey = 'q';
+        let dropKey = 's';
+
+        let achievements = {
+            'First Line Clear': false,
+            'Score 100 Points': false,
+            'Survive 5 Minutes': false
+        };
+
+        let achievementsUnlocked = [];
+        let gameStartTime = Date.now();
 
         document.addEventListener('keydown', event => {
             if (gameOver) return;
 
-            // Prevent holding down 'S' key from causing exponential drops
-            if (event.repeat && (event.key.toLowerCase() === 's')) {
+            const key = event.key.toLowerCase();
+
+            // Prevent holding down the drop key from causing issues
+            if (event.repeat && key === dropKey) {
                 return;
             }
 
             // Snake Controls - Arrow Keys
-            if (event.key === 'ArrowLeft') {
+            if (key === 'arrowleft') {
                 if (snakeDirection.x !== 1) {
                     snakeNewDirection = { x: -1, y: 0 };
                 }
-            } else if (event.key === 'ArrowUp') {
+            } else if (key === 'arrowup') {
                 if (snakeDirection.y !== 1) {
                     snakeNewDirection = { x: 0, y: -1 };
                 }
-            } else if (event.key === 'ArrowRight') {
+            } else if (key === 'arrowright') {
                 if (snakeDirection.x !== -1) {
                     snakeNewDirection = { x: 1, y: 0 };
                 }
-            } else if (event.key === 'ArrowDown') {
+            } else if (key === 'arrowdown') {
                 if (snakeDirection.y !== -1) {
                     snakeNewDirection = { x: 0, y: 1 };
                 }
             }
 
-            // Tetris Controls - WASD
-            else if (event.key.toLowerCase() === 'a') {
+            // Tetris Controls
+            else if (key === leftKey) {
                 tetrominoMove(-1);
-            } else if (event.key.toLowerCase() === 'd') {
+            } else if (key === rightKey) {
                 tetrominoMove(1);
-            } else if (event.key.toLowerCase() === 'w') {
+            } else if (key === rotateCWKey) {
                 rotate(tetrominoPlayer.matrix, 1);
-            } else if (event.key.toLowerCase() === 'q') {
+            } else if (key === rotateCCWKey) {
                 rotate(tetrominoPlayer.matrix, -1);
-            } else if (event.key.toLowerCase() === 's') {
-                if (!sKeyDown) {
-                    sKeyDown = true;
-                    sKeyHoldTime = 0;
+            } else if (key === dropKey) {
+                if (!dropKeyDown) {
+                    dropKeyDown = true;
+                    dropKeyHoldTime = 0;
                 }
             }
         });
 
         document.addEventListener('keyup', event => {
-            if (event.key.toLowerCase() === 's') {
-                sKeyDown = false;
-                sKeyHoldTime = 0;
-                dropInterval = tetrominoPlayer.speed; // Reset drop interval to normal
+            const key = event.key.toLowerCase();
+            if (key === dropKey) {
+                dropKeyDown = false;
+                dropKeyHoldTime = 0;
             }
+        });
+
+        // Mouse Control for Snake
+        let mousePosition = { x: snake[0].x * blockSize, y: snake[0].y * blockSize };
+        canvas.addEventListener('mousemove', event => {
+            const rect = canvas.getBoundingClientRect();
+            mousePosition = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
         });
 
         function tetrominoMove(dir) {
@@ -396,6 +561,16 @@
                 tetrominoReset();
                 let linesCleared = sweep();
                 tetrominoPlayer.score += linesCleared * 10;
+
+                if (linesCleared > 0 && !achievements['First Line Clear']) {
+                    achievements['First Line Clear'] = true;
+                    showAlert('Achievement Unlocked: First Line Clear!');
+                }
+
+                if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
+                    achievements['Score 100 Points'] = true;
+                    showAlert('Achievement Unlocked: Score 100 Points!');
+                }
             }
             dropCounter = 0;
         }
@@ -445,58 +620,96 @@
 
             dropCounter += deltaTime;
 
-            if (sKeyDown) {
-                sKeyHoldTime += deltaTime;
-                if (sKeyHoldTime > 2000) {
-                    // For every additional second, increase speed exponentially
-                    let extraTime = sKeyHoldTime - 2000;
-                    let speedMultiplier = Math.pow(2, extraTime / 1000); // Exponential increase
-                    dropInterval = tetrominoPlayer.speed / speedMultiplier;
-                } else {
-                    dropInterval = tetrominoPlayer.speed / 2; // Standard soft drop speed
-                }
-            } else {
-                dropInterval = tetrominoPlayer.speed;
-            }
+            if (dropKeyDown) {
+                dropKeyHoldTime += deltaTime;
+                if (dropKeyHoldTime >= 2000) {
+                    // After 2 seconds, drop by 4 rows
+                    const drops = Math.floor((dropKeyHoldTime - 2000) / 1000) + 1;
+                    const totalDrops = 4 * drops;
+                    for (let i = 0; i < totalDrops; i++) {
+                        tetrominoPlayer.pos.y++;
+                        if (collide(grid, tetrominoPlayer)) {
+                            tetrominoPlayer.pos.y--;
+                            merge(grid, tetrominoPlayer);
+                            tetrominoReset();
+                            let linesCleared = sweep();
+                            tetrominoPlayer.score += linesCleared * 10;
 
-            if (dropCounter > dropInterval) {
+                            if (linesCleared > 0 && !achievements['First Line Clear']) {
+                                achievements['First Line Clear'] = true;
+                                showAlert('Achievement Unlocked: First Line Clear!');
+                            }
+
+                            if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
+                                achievements['Score 100 Points'] = true;
+                                showAlert('Achievement Unlocked: Score 100 Points!');
+                            }
+                            break;
+                        }
+                    }
+                    dropKeyHoldTime = 2000; // Reset to prevent multiple drops in the same frame
+                    dropCounter = 0;
+                }
+            } else if (dropCounter > tetrominoPlayer.speed) {
                 tetrominoDrop();
             }
 
             snakeMoveCounter += deltaTime;
             if (snakeMoveCounter > snakeMoveInterval) {
                 snakeMoveCounter = 0;
+
+                // Mouse Control
+                const snakeHead = snake[0];
+                const targetX = Math.floor(mousePosition.x / blockSize);
+                const targetY = Math.floor(mousePosition.y / blockSize);
+                const deltaX = targetX - snakeHead.x;
+                const deltaY = targetY - snakeHead.y;
+
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    snakeNewDirection = { x: deltaX > 0 ? 1 : -1, y: 0 };
+                } else if (deltaY !== 0) {
+                    snakeNewDirection = { x: 0, y: deltaY > 0 ? 1 : -1 };
+                }
+
                 if (snakeNewDirection.x !== -snakeDirection.x || snakeNewDirection.y !== -snakeDirection.y) {
                     snakeDirection = snakeNewDirection;
                 }
-                const snakeHead = { x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y };
+
+                const newHead = { x: snakeHead.x + snakeDirection.x, y: snakeHead.y + snakeDirection.y };
 
                 // Proximity Alert
-                if (isNearCollision(snakeHead)) {
+                if (isNearCollision(newHead)) {
                     showAlert('Warning: Snake is near collision!');
                 } else {
                     hideAlert();
                 }
 
                 if (
-                    snakeHead.x < 0 ||
-                    snakeHead.x >= gridWidth ||
-                    snakeHead.y < 0 ||
-                    snakeHead.y >= gridHeight ||
-                    grid[snakeHead.y][snakeHead.x] !== 0 ||
-                    snakeCollision(snakeHead)
+                    newHead.x < 0 ||
+                    newHead.x >= gridWidth ||
+                    newHead.y < 0 ||
+                    newHead.y >= gridHeight ||
+                    grid[newHead.y][newHead.x] !== 0 ||
+                    snakeCollision(newHead) ||
+                    tetrominoCollision(newHead)
                 ) {
                     gameOver = true;
                     updateScoreBoard();
                     alert('Game Over! Snake collision detected.');
                 } else {
-                    snake.unshift(snakeHead);
+                    snake.unshift(newHead);
                     if (snake.length > snakeLength) {
                         snake.pop();
                     } else {
                         snakeScore += 1;
                     }
-                    checkPowerUpCollision(snakeHead);
+                    checkPowerUpCollision(newHead);
+                }
+
+                // Achievement: Survive 5 Minutes
+                if (!achievements['Survive 5 Minutes'] && (Date.now() - gameStartTime) >= 300000) {
+                    achievements['Survive 5 Minutes'] = true;
+                    showAlert('Achievement Unlocked: Survive 5 Minutes!');
                 }
             }
 
@@ -522,7 +735,8 @@
                     x >= gridWidth ||
                     y < 0 ||
                     y >= gridHeight ||
-                    grid[y][x] !== 0
+                    grid[y][x] !== 0 ||
+                    tetrominoContainsCell(x, y)
                 ) {
                     return true;
                 }
@@ -547,6 +761,23 @@
             for (let i = 1; i < snake.length; i++) {
                 if (head.x === snake[i].x && head.y === snake[i].y) {
                     return true;
+                }
+            }
+            return false;
+        }
+
+        function tetrominoCollision(head) {
+            return tetrominoContainsCell(head.x, head.y);
+        }
+
+        function tetrominoContainsCell(x, y) {
+            const m = tetrominoPlayer.matrix;
+            const o = tetrominoPlayer.pos;
+            for (let i = 0; i < m.length; ++i) {
+                for (let j = 0; j < m[i].length; ++j) {
+                    if (m[i][j] !== 0 && x === j + o.x && y === i + o.y) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -710,44 +941,7 @@
             }
         }
 
-        // Score Board Management (Local Storage Version)
-        /*
-        function updateScoreBoard() {
-            const totalScore = tetrominoPlayer.score + snakeScore;
-            const date = new Date().toLocaleDateString();
-
-            const newScore = { name: playerName, score: totalScore, date: date };
-
-            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
-            scores.push(newScore);
-            localStorage.setItem('tetrisSnakeScores', JSON.stringify(scores));
-        }
-
-        function loadScoreBoard() {
-            const scoreTableBody = document.querySelector('#scoreTable tbody');
-            scoreTableBody.innerHTML = ''; // Clear existing scores
-            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
-            scores.forEach(score => {
-                const newRow = document.createElement('tr');
-
-                const nameCell = document.createElement('td');
-                nameCell.textContent = score.name;
-                newRow.appendChild(nameCell);
-
-                const scoreCell = document.createElement('td');
-                scoreCell.textContent = score.score;
-                newRow.appendChild(scoreCell);
-
-                const dateCell = document.createElement('td');
-                dateCell.textContent = score.date;
-                newRow.appendChild(dateCell);
-
-                scoreTableBody.appendChild(newRow);
-            });
-        }
-        */
-
-        // Score Board Management (Server Version)
+        // Score Board Management (Leaderboard)
         function updateScoreBoard() {
             const totalScore = tetrominoPlayer.score + snakeScore;
             const date = new Date().toLocaleDateString();
