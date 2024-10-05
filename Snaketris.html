@@ -35,7 +35,9 @@
 
         #restartButton,
         #instructionsButton,
-        #scoreBoardButton {
+        #scoreBoardButton,
+        #keyBindingsButton,
+        #achievementsButton {
             display: inline-block;
             margin: 10px;
             padding: 10px 20px;
@@ -85,7 +87,7 @@
         }
 
         #alertBox {
-            position: absolute;
+            position: fixed;
             top: 10px;
             right: 10px;
             background: rgba(255, 0, 0, 0.9);
@@ -114,9 +116,7 @@
         }
 
         #nextReward {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
+            margin-top: 20px;
             background: rgba(0, 0, 0, 0.7);
             padding: 10px;
             border-radius: 5px;
@@ -127,7 +127,7 @@
             background: #111;
             border: 2px solid #FFD700;
             /* Gold Outline */
-            margin-left: 10px;
+            margin-top: 20px;
         }
 
         #scoreDisplay {
@@ -142,6 +142,41 @@
 
         #snakeSpeedControl input {
             width: 200px;
+        }
+
+        #warpTimeDisplay {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #sidebar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #scoreTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #scoreTable th,
+        #scoreTable td {
+            border: 1px solid #fff;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #keyBindingsContent label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        #keyBindingsContent input {
+            width: 50px;
+            text-align: center;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -159,23 +194,25 @@
         </div>
     </div>
 
+    <div id="alertBox"></div> <!-- Moved outside gameArea -->
+
     <div id="gameContainer">
         <div id="gameArea">
             <canvas id="gameCanvas"></canvas>
-            <div id="alertBox"></div>
-            <div id="nextReward">Next Achievement: First Line Clear</div>
         </div>
         <div id="sidebar">
             <canvas id="nextBlockCanvas" width="120" height="120"></canvas>
             <div id="scoreDisplay">
                 <p id="tetrisScore">Tetris Score: 0</p>
                 <p id="snakeScore">Snake Score: 0</p>
+                <div id="warpTimeDisplay"></div>
             </div>
             <div id="snakeSpeedControl">
                 <label for="speedSlider">Snake Speed:</label><br>
                 <input type="range" id="speedSlider" min="0.25" max="8" step="0.25" value="0.8">
                 <span id="speedValue">0.8 blocks/sec</span>
             </div>
+            <div id="nextReward">Next Achievement: First Line Clear</div>
         </div>
     </div>
 
@@ -222,7 +259,8 @@
                         seconds.</li>
                     <li><strong>Full Warp (⤡):</strong> Allows snake to wrap around all walls for 30 seconds.</li>
                 </ul>
-                <li>Warp power-ups appear only once every 3 minutes.</li>
+                <li>Only one warp power-up can be on the screen at a time.</li>
+                <li>Warp power-ups appear only after 1.5 minutes have passed since the previous warp effect ended.</li>
                 <li>An alert appears when the snake is near collision with walls, Tetris blocks, or the mouse pointer.
                 </li>
                 <li>A warning appears if the mouse pointer leaves the game area during play.</li>
@@ -240,15 +278,59 @@
         </div>
     </div>
 
-    <!-- Other Modals (Scoreboard, Key Bindings, Achievements) remain unchanged -->
+    <!-- Score Board Modal -->
+    <div id="scoreBoardModal">
+        <div id="scoreBoardContent">
+            <h2>Leaderboard</h2>
+            <table id="scoreTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Scores will be populated here -->
+                </tbody>
+            </table>
+            <button class="closeModal" id="closeScoreBoard">Close</button>
+        </div>
+    </div>
+
+    <!-- Key Bindings Modal -->
+    <div id="keyBindingsModal">
+        <div id="keyBindingsContent">
+            <h2>Key Bindings</h2>
+            <label>Move Left: <input type="text" id="leftKey" maxlength="1" value="A"></label>
+            <label>Move Right: <input type="text" id="rightKey" maxlength="1" value="D"></label>
+            <label>Rotate Clockwise: <input type="text" id="rotateCWKey" maxlength="1" value="W"></label>
+            <label>Rotate Counter-clockwise: <input type="text" id="rotateCCWKey" maxlength="1" value="Q"></label>
+            <label>Soft Drop: <input type="text" id="dropKey" maxlength="1" value="S"></label>
+            <button id="saveKeyBindings">Save</button>
+            <button class="closeModal" id="closeKeyBindings">Close</button>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievementsModal">
+        <div id="achievementsContent">
+            <h2>Achievements</h2>
+            <ul id="achievementsList">
+                <!-- Achievements will be populated here -->
+            </ul>
+            <button class="closeModal" id="closeAchievements">Close</button>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const context = canvas.getContext('2d');
 
-        // Increase game area by 30%
+        // Adjusted game area: Reduce vertical size by 20%
+        const originalGridHeight = 20;
         const gridWidth = Math.floor(40 * 1.3); // 4 times wider
-        const gridHeight = Math.floor(20 * 1.3);
+        const gridHeight = Math.floor(originalGridHeight * 1.3 * 0.8); // Reduce by 20%
         const blockSize = 30;
 
         canvas.width = gridWidth * blockSize;
@@ -374,7 +456,7 @@
         let verticalWarpEndTime = 0;
         let fullWarpEndTime = 0;
         let powerUpDuration = 30000; // Power-up lasts 30 seconds
-        let lastWarpPowerUpTime = 0; // Last time a warp power-up was generated
+        let lastWarpPowerUpEndTime = 0; // Last time a warp effect ended
 
         function resetGame() {
             grid = createMatrix(gridWidth, gridHeight);
@@ -392,6 +474,7 @@
             sideWarpEndTime = 0;
             verticalWarpEndTime = 0;
             fullWarpEndTime = 0;
+            lastWarpPowerUpEndTime = 0;
             gameOver = false;
             lastTime = 0;
             dropCounter = 0;
@@ -399,9 +482,14 @@
             achievements = {
                 'First Line Clear': false,
                 'Score 100 Points': false,
-                'Survive 5 Minutes': false
+                'Survive 5 Minutes': false,
+                'Collect 10 Power-Ups': false,
+                'Clear 5 Lines': false,
+                'Reach Snake Length of 20': false
             };
             achievementsUnlocked = [];
+            powerUpsCollected = 0;
+            linesClearedTotal = 0;
             gameStartTime = Date.now();
             generatePowerUps();
             updateNextRewardDisplay();
@@ -432,7 +520,75 @@
             instructionsModal.style.display = 'none';
         });
 
-        // Other Modals (Scoreboard, Key Bindings, Achievements) remain unchanged
+        // Score Board Modal
+        const scoreBoardButton = document.getElementById('scoreBoardButton');
+        const scoreBoardModal = document.getElementById('scoreBoardModal');
+        const closeScoreBoard = document.getElementById('closeScoreBoard');
+
+        scoreBoardButton.addEventListener('click', () => {
+            loadScoreBoard();
+            scoreBoardModal.style.display = 'flex';
+        });
+
+        closeScoreBoard.addEventListener('click', () => {
+            scoreBoardModal.style.display = 'none';
+        });
+
+        // Key Bindings Modal
+        const keyBindingsButton = document.getElementById('keyBindingsButton');
+        const keyBindingsModal = document.getElementById('keyBindingsModal');
+        const closeKeyBindings = document.getElementById('closeKeyBindings');
+        const saveKeyBindings = document.getElementById('saveKeyBindings');
+
+        keyBindingsButton.addEventListener('click', () => {
+            keyBindingsModal.style.display = 'flex';
+        });
+
+        closeKeyBindings.addEventListener('click', () => {
+            keyBindingsModal.style.display = 'none';
+        });
+
+        saveKeyBindings.addEventListener('click', () => {
+            leftKey = document.getElementById('leftKey').value.toLowerCase();
+            rightKey = document.getElementById('rightKey').value.toLowerCase();
+            rotateCWKey = document.getElementById('rotateCWKey').value.toLowerCase();
+            rotateCCWKey = document.getElementById('rotateCCWKey').value.toLowerCase();
+            dropKey = document.getElementById('dropKey').value.toLowerCase();
+            updateKeyDisplay();
+            keyBindingsModal.style.display = 'none';
+        });
+
+        function updateKeyDisplay() {
+            document.getElementById('leftKeyDisplay').textContent = leftKey.toUpperCase();
+            document.getElementById('rightKeyDisplay').textContent = rightKey.toUpperCase();
+            document.getElementById('rotateCWKeyDisplay').textContent = rotateCWKey.toUpperCase();
+            document.getElementById('rotateCCWKeyDisplay').textContent = rotateCCWKey.toUpperCase();
+            document.getElementById('dropKeyDisplay').textContent = dropKey.toUpperCase();
+        }
+
+        // Achievements Modal
+        const achievementsButton = document.getElementById('achievementsButton');
+        const achievementsModal = document.getElementById('achievementsModal');
+        const closeAchievements = document.getElementById('closeAchievements');
+        const achievementsList = document.getElementById('achievementsList');
+
+        achievementsButton.addEventListener('click', () => {
+            loadAchievements();
+            achievementsModal.style.display = 'flex';
+        });
+
+        closeAchievements.addEventListener('click', () => {
+            achievementsModal.style.display = 'none';
+        });
+
+        function loadAchievements() {
+            achievementsList.innerHTML = '';
+            for (let [key, unlocked] of Object.entries(achievements)) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${key}: ${unlocked ? 'Unlocked' : 'Locked'}`;
+                achievementsList.appendChild(listItem);
+            }
+        }
 
         // Alert Box
         const alertBox = document.getElementById('alertBox');
@@ -448,10 +604,15 @@
         let achievements = {
             'First Line Clear': false,
             'Score 100 Points': false,
-            'Survive 5 Minutes': false
+            'Survive 5 Minutes': false,
+            'Collect 10 Power-Ups': false,
+            'Clear 5 Lines': false,
+            'Reach Snake Length of 20': false
         };
 
         let achievementsUnlocked = [];
+        let powerUpsCollected = 0;
+        let linesClearedTotal = 0;
         let gameStartTime = Date.now();
 
         document.addEventListener('keydown', event => {
@@ -479,18 +640,10 @@
                         let linesCleared = sweep();
                         tetrominoPlayer.score += linesCleared * 10;
                         updateScoreDisplays();
+                        linesClearedTotal += linesCleared;
 
-                        if (linesCleared > 0 && !achievements['First Line Clear']) {
-                            achievements['First Line Clear'] = true;
-                            showAlert('Achievement Unlocked: First Line Clear!');
-                            updateNextRewardDisplay();
-                        }
+                        checkAchievements();
 
-                        if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
-                            achievements['Score 100 Points'] = true;
-                            showAlert('Achievement Unlocked: Score 100 Points!');
-                            updateNextRewardDisplay();
-                        }
                         break;
                     }
                 }
@@ -536,18 +689,9 @@
                 let linesCleared = sweep();
                 tetrominoPlayer.score += linesCleared * 10;
                 updateScoreDisplays();
+                linesClearedTotal += linesCleared;
 
-                if (linesCleared > 0 && !achievements['First Line Clear']) {
-                    achievements['First Line Clear'] = true;
-                    showAlert('Achievement Unlocked: First Line Clear!');
-                    updateNextRewardDisplay();
-                }
-
-                if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
-                    achievements['Score 100 Points'] = true;
-                    showAlert('Achievement Unlocked: Score 100 Points!');
-                    updateNextRewardDisplay();
-                }
+                checkAchievements();
             }
             dropCounter = 0;
         }
@@ -584,6 +728,7 @@
 
         let gameOver = false;
         let dropCounter = 0;
+        let snakeMoveCounter = 0;
 
         // Adjust snake speed (20% slower)
         let snakeMoveInterval = 200 / 0.8; // milliseconds
@@ -899,8 +1044,8 @@
             // Indicate horizontal lines with 6 or more blocks
             indicateLines();
 
-            // Draw active power-ups and warp timers
-            drawActivePowerUps();
+            // Draw warp timers outside the play area
+            drawWarpTimers();
         }
 
         function drawMatrix(matrix, offset, color) {
@@ -947,25 +1092,26 @@
             }
         }
 
-        function drawActivePowerUps() {
-            let activePowerUps = [];
+        function drawWarpTimers() {
+            const warpTimeDisplay = document.getElementById('warpTimeDisplay');
+            let activeWarps = [];
             if (isFullWarpActive()) {
                 let remainingTime = Math.ceil((fullWarpEndTime - Date.now()) / 1000);
-                activePowerUps.push(`Full Warp (${remainingTime}s left)`);
+                activeWarps.push(`Full Warp (${remainingTime}s left)`);
             } else {
                 if (isSideWarpActive()) {
                     let remainingTime = Math.ceil((sideWarpEndTime - Date.now()) / 1000);
-                    activePowerUps.push(`Side Warp (${remainingTime}s left)`);
+                    activeWarps.push(`Side Warp (${remainingTime}s left)`);
                 }
                 if (isVerticalWarpActive()) {
                     let remainingTime = Math.ceil((verticalWarpEndTime - Date.now()) / 1000);
-                    activePowerUps.push(`Vertical Warp (${remainingTime}s left)`);
+                    activeWarps.push(`Vertical Warp (${remainingTime}s left)`);
                 }
             }
-            if (activePowerUps.length > 0) {
-                context.fillStyle = '#fff';
-                context.font = '16px Arial';
-                context.fillText(`Warp Time Left: ${activePowerUps.join(', ')}`, 10, 80);
+            if (activeWarps.length > 0) {
+                warpTimeDisplay.textContent = `Warp Time Left: ${activeWarps.join(', ')}`;
+            } else {
+                warpTimeDisplay.textContent = '';
             }
         }
 
@@ -1025,7 +1171,7 @@
 
         // Power-Up Functions
         function generatePowerUps() {
-            // Only remove the power-up that is eaten, others remain
+            // Generate multiple power-ups
             const currentTime = Date.now();
             const types = [
                 { symbol: '↑', effect: 'increase', color: '#FFA500' }, // Orange
@@ -1033,41 +1179,52 @@
                 { symbol: '?', effect: 'random', color: '#FFFF00' }    // Yellow
             ];
 
-            // Warp Power-Ups, only if more than 3 minutes have passed since last warp power-up
+            // Warp Power-Ups, only one warp power-up can be on screen at a time
             const warpTypes = [
                 { symbol: '⇄', effect: 'sideWarp', color: '#008000' }, // Green shades
                 { symbol: '⇅', effect: 'verticalWarp', color: '#00A000' },
                 { symbol: '⤡', effect: 'fullWarp', color: '#00C000' }
             ];
 
-            let warpPowerUpIncluded = false;
+            // Check if warp power-up can be generated
+            let canGenerateWarp = false;
+            if (Date.now() - lastWarpPowerUpEndTime >= 90000 && !isWarpActive()) {
+                canGenerateWarp = !powerUps.some(p => warpTypes.some(wt => wt.effect === p.effect));
+            }
 
-            // Generate one new power-up
-            let powerUp;
-            do {
-                // Decide whether to include a warp power-up
-                let powerUpType;
-                if (!warpPowerUpIncluded && (currentTime - lastWarpPowerUpTime) >= 180000) {
-                    // Include a warp power-up
-                    powerUpType = warpTypes[Math.floor(Math.random() * warpTypes.length)];
-                    warpPowerUpIncluded = true;
-                    lastWarpPowerUpTime = currentTime;
-                } else {
-                    // Include a regular power-up
-                    powerUpType = types[Math.floor(Math.random() * types.length)];
-                }
+            // Generate power-ups
+            powerUps = powerUps.filter(p => true); // Keep existing power-ups
 
-                powerUp = {
-                    x: Math.floor(Math.random() * gridWidth),
-                    y: Math.floor(Math.random() * gridHeight),
-                    ...powerUpType
-                };
-            } while (
-                grid[powerUp.y][powerUp.x] !== 0 ||
-                snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y) ||
-                powerUps.some(p => p.x === powerUp.x && p.y === powerUp.y)
-            );
-            powerUps.push(powerUp);
+            let numberOfPowerUps = 5 - powerUps.length;
+            for (let i = 0; i < numberOfPowerUps; i++) {
+                let powerUp;
+                do {
+                    let powerUpType;
+                    if (canGenerateWarp && !powerUps.some(p => warpTypes.some(wt => wt.effect === p.effect))) {
+                        // Include a warp power-up
+                        powerUpType = warpTypes[Math.floor(Math.random() * warpTypes.length)];
+                        canGenerateWarp = false; // Only one warp power-up
+                    } else {
+                        // Include a regular power-up
+                        powerUpType = types[Math.floor(Math.random() * types.length)];
+                    }
+
+                    powerUp = {
+                        x: Math.floor(Math.random() * gridWidth),
+                        y: Math.floor(Math.random() * gridHeight),
+                        ...powerUpType
+                    };
+                } while (
+                    grid[powerUp.y][powerUp.x] !== 0 ||
+                    snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y) ||
+                    powerUps.some(p => p.x === powerUp.x && p.y === powerUp.y)
+                );
+                powerUps.push(powerUp);
+            }
+        }
+
+        function isWarpActive() {
+            return isSideWarpActive() || isVerticalWarpActive() || isFullWarpActive();
         }
 
         function checkPowerUpCollision(head) {
@@ -1075,7 +1232,6 @@
                 if (head.x === powerUps[i].x && head.y === powerUps[i].y) {
                     applyPowerUp(powerUps[i]);
                     powerUps.splice(i, 1);
-                    // Generate a new power-up
                     generatePowerUps();
                     break;
                 }
@@ -1108,14 +1264,19 @@
                 }
             } else if (powerUp.effect === 'sideWarp') {
                 sideWarpEndTime = Date.now() + powerUpDuration;
+                lastWarpPowerUpEndTime = sideWarpEndTime;
                 showAlert('Side Warp Activated! Wrap around side walls.');
             } else if (powerUp.effect === 'verticalWarp') {
                 verticalWarpEndTime = Date.now() + powerUpDuration;
+                lastWarpPowerUpEndTime = verticalWarpEndTime;
                 showAlert('Vertical Warp Activated! Wrap around top and bottom walls.');
             } else if (powerUp.effect === 'fullWarp') {
                 fullWarpEndTime = Date.now() + powerUpDuration;
+                lastWarpPowerUpEndTime = fullWarpEndTime;
                 showAlert('Full Warp Activated! Wrap around all walls.');
             }
+            powerUpsCollected++;
+            checkAchievements();
         }
 
         // Display Next Reward
@@ -1131,10 +1292,78 @@
             document.getElementById('snakeScore').textContent = `Snake Score: ${snakeScore}`;
         }
 
-        // Score Board Management (Local Storage Version) remains unchanged
+        function checkAchievements() {
+            if (linesClearedTotal >= 5 && !achievements['Clear 5 Lines']) {
+                achievements['Clear 5 Lines'] = true;
+                showAlert('Achievement Unlocked: Clear 5 Lines!');
+                updateNextRewardDisplay();
+            }
+            if (powerUpsCollected >= 10 && !achievements['Collect 10 Power-Ups']) {
+                achievements['Collect 10 Power-Ups'] = true;
+                showAlert('Achievement Unlocked: Collect 10 Power-Ups!');
+                updateNextRewardDisplay();
+            }
+            if (snakeLength >= 20 && !achievements['Reach Snake Length of 20']) {
+                achievements['Reach Snake Length of 20'] = true;
+                showAlert('Achievement Unlocked: Reach Snake Length of 20!');
+                updateNextRewardDisplay();
+            }
+            if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
+                achievements['Score 100 Points'] = true;
+                showAlert('Achievement Unlocked: Score 100 Points!');
+                updateNextRewardDisplay();
+            }
+            if (linesClearedTotal >= 1 && !achievements['First Line Clear']) {
+                achievements['First Line Clear'] = true;
+                showAlert('Achievement Unlocked: First Line Clear!');
+                updateNextRewardDisplay();
+            }
+        }
+
+        // Score Board Management (Local Storage Version)
+        function updateScoreBoard() {
+            const totalScore = tetrominoPlayer.score + snakeScore;
+            const dateTime = new Date().toLocaleString();
+
+            const newScore = { name: playerName, score: totalScore, dateTime: dateTime };
+
+            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
+            scores.push(newScore);
+
+            // Sort scores in descending order
+            scores.sort((a, b) => b.score - a.score);
+
+            // Keep only top 10 scores
+            scores = scores.slice(0, 10);
+
+            localStorage.setItem('tetrisSnakeScores', JSON.stringify(scores));
+        }
+
+        function loadScoreBoard() {
+            const scoreTableBody = document.querySelector('#scoreTable tbody');
+            scoreTableBody.innerHTML = ''; // Clear existing scores
+            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
+            scores.forEach(score => {
+                const newRow = document.createElement('tr');
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = score.name;
+                newRow.appendChild(nameCell);
+
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = score.score;
+                newRow.appendChild(scoreCell);
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = score.dateTime;
+                newRow.appendChild(dateCell);
+
+                scoreTableBody.appendChild(newRow);
+            });
+        }
 
         // Start the game when "Start Game" button is clicked
-        // resetGame();
+        // resetGame(); // Will be called when "Start Game" is clicked
     </script>
 </body>
 
