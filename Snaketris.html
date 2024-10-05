@@ -24,28 +24,9 @@
             text-align: center;
         }
 
-        #scoreBoard {
-            margin: 0 auto;
-            width: 90%;
-            max-width: 1200px;
-            text-align: left;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        #scoreBoard table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        #scoreBoard th,
-        #scoreBoard td {
-            border: 1px solid #fff;
-            padding: 5px;
-        }
-
         #restartButton,
-        #instructionsButton {
+        #instructionsButton,
+        #scoreBoardButton {
             display: inline-block;
             margin: 10px;
             padding: 10px 20px;
@@ -59,7 +40,8 @@
             font-size: 16px;
         }
 
-        #instructionsModal {
+        #instructionsModal,
+        #scoreBoardModal {
             position: fixed;
             top: 0;
             left: 0;
@@ -72,7 +54,8 @@
             justify-content: center;
         }
 
-        #instructionsContent {
+        #instructionsContent,
+        #scoreBoardContent {
             background: #222;
             padding: 20px;
             border-radius: 10px;
@@ -81,7 +64,7 @@
             overflow-y: auto;
         }
 
-        #closeInstructions {
+        .closeModal {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
@@ -109,21 +92,7 @@
         <div>
             <button id="restartButton">Start Game</button>
             <button id="instructionsButton">Instructions</button>
-        </div>
-        <div id="scoreBoard">
-            <h2>Score Board</h2>
-            <table id="scoreTable">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Score</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Scores will be populated here -->
-                </tbody>
-            </table>
+            <button id="scoreBoardButton">Score Board</button>
         </div>
     </div>
 
@@ -140,14 +109,46 @@
             <ul>
                 <li><strong>Move Left/Right:</strong> A / D</li>
                 <li><strong>Rotate:</strong> W (Clockwise) / Q (Counter-clockwise)</li>
-                <li><strong>Soft Drop:</strong> S</li>
+                <li><strong>Soft Drop:</strong> S (Press once; holding does not increase speed)</li>
+            </ul>
+            <h3>Gameplay Mechanics</h3>
+            <ul>
+                <li>The Tetris block drop speed increases by 1% each time a block is placed.</li>
+                <li>The speed resets to the initial value when a new game starts.</li>
+                <li>Collect power-ups with the snake:</li>
+                <ul>
+                    <li><strong>Up Arrow (↑):</strong> Increases snake length by 20% and adds 2 points.</li>
+                    <li><strong>Down Arrow (↓):</strong> Decreases snake length by 30% and subtracts 1 point.</li>
+                    <li><strong>Question Mark (?):</strong> Randomly increases or decreases snake length.</li>
+                </ul>
+                <li>An alert appears when the snake is near collision with walls or Tetris blocks.</li>
             </ul>
             <h3>Game Over Conditions</h3>
             <ul>
                 <li>Snake collides with walls, Tetris blocks, or itself.</li>
                 <li>Tetris blocks reach the top and cannot be placed.</li>
             </ul>
-            <button id="closeInstructions">Close</button>
+            <button class="closeModal" id="closeInstructions">Close</button>
+        </div>
+    </div>
+
+    <!-- Score Board Modal -->
+    <div id="scoreBoardModal">
+        <div id="scoreBoardContent">
+            <h2>Score Board</h2>
+            <table id="scoreTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Scores will be populated here -->
+                </tbody>
+            </table>
+            <button class="closeModal" id="closeScoreBoard">Close</button>
         </div>
     </div>
 
@@ -220,7 +221,8 @@
             pos: { x: 0, y: 0 },
             matrix: null,
             score: 0,
-            color: '#FFFFFF' // Default color
+            color: '#FFFFFF', // Default color
+            speed: 1000, // Initial drop interval in milliseconds
         };
 
         function tetrominoReset() {
@@ -228,6 +230,7 @@
             tetrominoPlayer.pos.y = 0;
             tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
             tetrominoPlayer.color = rainbowColors[Math.floor(Math.random() * rainbowColors.length)];
+            tetrominoPlayer.speed *= 0.99; // Increase speed by 1%
 
             if (collide(grid, tetrominoPlayer)) {
                 gameOver = true;
@@ -247,6 +250,7 @@
         function resetGame() {
             grid = createMatrix(gridWidth, gridHeight);
             tetrominoPlayer.score = 0;
+            tetrominoPlayer.speed = 1000; // Reset speed
             snakeScore = 0;
             snakeLength = 5;
             tetrominoReset();
@@ -282,6 +286,20 @@
 
         closeInstructions.addEventListener('click', () => {
             instructionsModal.style.display = 'none';
+        });
+
+        // Score Board Modal
+        const scoreBoardButton = document.getElementById('scoreBoardButton');
+        const scoreBoardModal = document.getElementById('scoreBoardModal');
+        const closeScoreBoard = document.getElementById('closeScoreBoard');
+
+        scoreBoardButton.addEventListener('click', () => {
+            loadScoreBoard();
+            scoreBoardModal.style.display = 'flex';
+        });
+
+        closeScoreBoard.addEventListener('click', () => {
+            scoreBoardModal.style.display = 'none';
         });
 
         // Alert Box
@@ -349,34 +367,38 @@
         }
 
         function rotate(matrix, dir) {
+            // Create a deep copy of the matrix
+            let rotated = JSON.parse(JSON.stringify(matrix));
+
             // Transpose the matrix
-            for (let y = 0; y < matrix.length; ++y) {
+            for (let y = 0; y < rotated.length; ++y) {
                 for (let x = 0; x < y; ++x) {
-                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                    [rotated[x][y], rotated[y][x]] = [rotated[y][x], rotated[x][y]];
                 }
             }
             // Reverse the rows for clockwise or columns for counter-clockwise rotation
             if (dir > 0) {
-                matrix.forEach(row => row.reverse());
+                rotated.forEach(row => row.reverse());
             } else {
-                matrix.reverse();
+                rotated.reverse();
             }
 
             const pos = tetrominoPlayer.pos.x;
             let offset = 1;
-            while (collide(grid, tetrominoPlayer)) {
+            while (collide(grid, { pos: tetrominoPlayer.pos, matrix: rotated })) {
                 tetrominoPlayer.pos.x += offset;
                 offset = -(offset + (offset > 0 ? 1 : -1));
-                if (offset > matrix[0].length) {
+                if (offset > rotated[0].length) {
                     tetrominoPlayer.pos.x = pos;
                     return;
                 }
             }
+            tetrominoPlayer.matrix = rotated;
         }
 
         let gameOver = false;
         let dropCounter = 0;
-        let dropInterval = 1000; // milliseconds
+        let dropInterval = tetrominoPlayer.speed; // milliseconds
 
         let snakeMoveCounter = 0;
         let snakeMoveInterval = 200; // milliseconds
@@ -388,6 +410,7 @@
             lastTime = time;
 
             dropCounter += deltaTime;
+            dropInterval = tetrominoPlayer.speed;
             if (dropCounter > dropInterval) {
                 tetrominoDrop();
             }
@@ -609,42 +632,63 @@
         function applyPowerUp(powerUp) {
             if (powerUp.effect === 'increase') {
                 snakeLength = Math.ceil(snakeLength * 1.2);
-                showAlert('Snake length increased by 20%!');
+                snakeScore += 2;
+                showAlert('Snake length increased by 20%! +2 points');
             } else if (powerUp.effect === 'decrease') {
                 snakeLength = Math.floor(snakeLength * 0.7);
-                showAlert('Snake length decreased by 30%!');
+                snakeScore -= 1;
+                showAlert('Snake length decreased by 30%! -1 point');
             } else if (powerUp.effect === 'random') {
                 const randomEffect = Math.random() < 0.5 ? 'increase' : 'decrease';
                 if (randomEffect === 'increase') {
                     snakeLength = Math.ceil(snakeLength * 1.2);
-                    showAlert('Snake length increased by 20%!');
+                    snakeScore += 2;
+                    showAlert('Snake length increased by 20%! +2 points');
                 } else {
                     snakeLength = Math.floor(snakeLength * 0.7);
-                    showAlert('Snake length decreased by 30%!');
+                    snakeScore -= 1;
+                    showAlert('Snake length decreased by 30%! -1 point');
                 }
             }
         }
 
         // Score Board Management
         function updateScoreBoard() {
-            const scoreTableBody = document.querySelector('#scoreTable tbody');
-            const newRow = document.createElement('tr');
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = playerName;
-            newRow.appendChild(nameCell);
-
-            const scoreCell = document.createElement('td');
             const totalScore = tetrominoPlayer.score + snakeScore;
-            scoreCell.textContent = totalScore;
-            newRow.appendChild(scoreCell);
+            const date = new Date().toLocaleDateString();
 
-            const dateCell = document.createElement('td');
-            dateCell.textContent = new Date().toLocaleDateString();
-            newRow.appendChild(dateCell);
+            const newScore = { name: playerName, score: totalScore, date: date };
 
-            scoreTableBody.appendChild(newRow);
+            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
+            scores.push(newScore);
+            localStorage.setItem('tetrisSnakeScores', JSON.stringify(scores));
         }
+
+        function loadScoreBoard() {
+            const scoreTableBody = document.querySelector('#scoreTable tbody');
+            scoreTableBody.innerHTML = ''; // Clear existing scores
+            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
+            scores.forEach(score => {
+                const newRow = document.createElement('tr');
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = score.name;
+                newRow.appendChild(nameCell);
+
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = score.score;
+                newRow.appendChild(scoreCell);
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = score.date;
+                newRow.appendChild(dateCell);
+
+                scoreTableBody.appendChild(newRow);
+            });
+        }
+
+        // Start the game on page load
+        // resetGame();
     </script>
 </body>
 
