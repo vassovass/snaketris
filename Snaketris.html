@@ -37,7 +37,8 @@
         #instructionsButton,
         #scoreBoardButton,
         #keyBindingsButton,
-        #achievementsButton {
+        #achievementsButton,
+        #powerUpsButton {
             display: inline-block;
             margin: 10px;
             padding: 10px 20px;
@@ -54,7 +55,8 @@
         #instructionsModal,
         #scoreBoardModal,
         #keyBindingsModal,
-        #achievementsModal {
+        #achievementsModal,
+        #powerUpsModal {
             position: fixed;
             top: 0;
             left: 0;
@@ -70,7 +72,8 @@
         #instructionsContent,
         #scoreBoardContent,
         #keyBindingsContent,
-        #achievementsContent {
+        #achievementsContent,
+        #powerUpsContent {
             background: #222;
             padding: 20px;
             border-radius: 10px;
@@ -178,6 +181,11 @@
             text-align: center;
             margin-left: 10px;
         }
+
+        #speedIncreaseDisplay {
+            margin-top: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 
@@ -188,13 +196,14 @@
         <div>
             <button id="restartButton">Start Game</button>
             <button id="instructionsButton">Instructions</button>
+            <button id="powerUpsButton">Power-Ups</button>
             <button id="scoreBoardButton">Leaderboard</button>
             <button id="keyBindingsButton">Key Bindings</button>
             <button id="achievementsButton">Achievements</button>
         </div>
     </div>
 
-    <div id="alertBox"></div> <!-- Moved outside gameArea -->
+    <div id="alertBox"></div>
 
     <div id="gameContainer">
         <div id="gameArea">
@@ -205,6 +214,7 @@
             <div id="scoreDisplay">
                 <p id="tetrisScore">Tetris Score: 0</p>
                 <p id="snakeScore">Snake Score: 0</p>
+                <p id="livesDisplay">Lives: 3</p>
                 <div id="warpTimeDisplay"></div>
             </div>
             <div id="snakeSpeedControl">
@@ -212,6 +222,7 @@
                 <input type="range" id="speedSlider" min="0.25" max="8" step="0.25" value="0.8">
                 <span id="speedValue">0.8 blocks/sec</span>
             </div>
+            <div id="speedIncreaseDisplay"></div>
             <div id="nextReward">Next Achievement: First Line Clear</div>
         </div>
     </div>
@@ -220,91 +231,74 @@
     <div id="instructionsModal">
         <div id="instructionsContent">
             <h2>Instructions</h2>
-            <h3>Objective</h3>
-            <p>Control both the snake and Tetris blocks simultaneously. Avoid collisions between the snake and Tetris
-                blocks, including the falling block. Clear lines with Tetris blocks to earn points. Keep the snake alive
-                to increase your snake score.</p>
-
-            <h3>Controls</h3>
+            <p>
+                Welcome to <strong>SnakeTris</strong>! This game combines the classic games of <strong>Snake</strong>
+                and
+                <strong>Tetris</strong> into one exciting challenge.
+            </p>
+            <h3>Objective:</h3>
+            <p>
+                Survive as long as possible by controlling the Tetris blocks and the Snake simultaneously. Clear lines
+                by
+                filling rows with blocks and collect power-ups to enhance your snake.
+            </p>
+            <h3>Controls:</h3>
             <ul>
-                <li><strong>Snake Controls:</strong> Mouse Pointer (keep the mouse over the game area)</li>
-                <li><strong>Tetris Controls:</strong>
-                    <ul>
-                        <li><strong>Move Left/Right:</strong> <span id="leftKeyDisplay">A</span> / <span
-                                id="rightKeyDisplay">D</span></li>
-                        <li><strong>Rotate:</strong> <span id="rotateCWKeyDisplay">W</span> (Clockwise) / <span
-                                id="rotateCCWKeyDisplay">Q</span> (Counter-clockwise)</li>
-                        <li><strong>Soft Drop:</strong> Press <span id="dropKeyDisplay">S</span> (Drops by 5 rows)</li>
-                    </ul>
-                </li>
+                <li>Move Left: <span id="leftKeyDisplay">A</span></li>
+                <li>Move Right: <span id="rightKeyDisplay">D</span></li>
+                <li>Rotate Clockwise: <span id="rotateCWKeyDisplay">W</span></li>
+                <li>Rotate Counter-Clockwise: <span id="rotateCCWKeyDisplay">Q</span></li>
+                <li>Soft Drop: <span id="dropKeyDisplay">S</span></li>
             </ul>
-
-            <h3>Gameplay Mechanics</h3>
-            <h4>Tetris Rules</h4>
-            <ul>
-                <li>Tetris blocks change shape every time a new block comes down.</li>
-                <li><strong>Ghost Piece:</strong> A shadow shows where the Tetris block will land if dropped directly
-                    down.</li>
-                <li>Pressing the 'Soft Drop' key will drop the Tetris block by 5 rows.</li>
-                <li>The Tetris block drop speed increases by 5% each time a block is placed.</li>
-                <li>Any consecutive horizontal line of 12 blocks or more will disappear and earn you points.</li>
-                <li><strong>Line Completion Indicators:</strong> If there are 6 or more horizontal blocks together,
-                    numbers indicate how many more blocks are needed to clear the line. These numbers are shown on the
-                    outer blocks of the line.</li>
-            </ul>
-
-            <h4>Snake Rules</h4>
-            <ul>
-                <li>Control the snake using the mouse pointer.</li>
-                <li>The snake moves towards the mouse pointer but cannot reverse direction directly.</li>
-                <li>Collect power-ups to alter the snake's length and abilities.</li>
-                <li>Avoid colliding with walls (unless warp power-up is active), Tetris blocks (including the falling
-                    block), or itself.</li>
-            </ul>
-
-            <h3>How to Increase Your Score</h3>
-            <ul>
-                <li><strong>Tetris Score:</strong> Earn points by clearing lines with Tetris blocks. Each line cleared
-                    gives you 10 points.</li>
-                <li><strong>Snake Score:</strong> Increase your snake score by surviving longer and collecting
-                    power-ups.</li>
-            </ul>
-
-            <h3>Power-Ups Key</h3>
-            <ul>
-                <li><span style="color: #FFA500;">&#x2191;</span> <strong>Up Arrow (↑):</strong> Increases snake length
-                    by 20% and adds 2 points.</li>
-                <li><span style="color: #FF0000;">&#x2193;</span> <strong>Down Arrow (↓):</strong> Decreases snake
-                    length by 30% and subtracts 1 point.</li>
-                <li><span style="color: #FFFF00;">?</span> <strong>Question Mark (?):</strong> Randomly increases or
-                    decreases snake length.</li>
-            </ul>
-
-            <h3>Warp Power-Ups</h3>
-            <ul>
-                <li><span style="color: #008000;">&#x21C4;</span> <strong>Side Warp (⇄):</strong> Allows snake to wrap
-                    around side walls for 30 seconds.</li>
-                <li><span style="color: #00A000;">&#x21C5;</span> <strong>Vertical Warp (⇅):</strong> Allows snake to
-                    wrap around top and bottom walls for 30 seconds.</li>
-                <li><span style="color: #00C000;">&#x2941;</span> <strong>Full Warp (⤡):</strong> Allows snake to wrap
-                    around all walls for 30 seconds.</li>
-            </ul>
-
-            <h3>Warnings</h3>
-            <ul>
-                <li>An alert appears when the snake is near collision with walls, Tetris blocks, or the mouse pointer.
-                </li>
-                <li>A warning appears if the mouse pointer leaves the game area during play.</li>
-            </ul>
-
-            <h3>Game Over Conditions</h3>
-            <ul>
-                <li>Snake collides with walls (unless warp power-up is active), Tetris blocks (including the falling
-                    block), or itself.</li>
-                <li>Tetris blocks reach the top and cannot be placed.</li>
-            </ul>
-
+            <p>
+                Use your mouse to control the snake. The snake will follow your mouse pointer within the game area.
+            </p>
+            <h3>Game Rules:</h3>
+            <h4>Tetris:</h4>
+            <p>
+                - Blocks (Tetrominoes) will fall from the top. Your goal is to arrange them to fill horizontal
+                lines.<br>
+                - A line is cleared when you fill a row with <strong>12 consecutive blocks</strong> without gaps.<br>
+                - As time progresses, the falling speed of the blocks increases by 10% every minute.<br>
+                - You earn points for clearing lines.
+            </p>
+            <h4>Snake:</h4>
+            <p>
+                - Control the snake to collect power-ups and avoid collisions.<br>
+                - The snake cannot pass through settled Tetris blocks.<br>
+                - If the snake collides with itself or a settled block, you lose a life.<br>
+                - You start with 3 lives. You can gain extra lives by collecting certain power-ups.
+            </p>
+            <h3>Power-Ups:</h3>
+            <p>
+                Various power-ups appear on the game board. Collect them with the snake to gain special abilities. Check
+                the
+                "Power-Ups" menu for details.
+            </p>
+            <h3>Scoring System:</h3>
+            <p>
+                - Clearing a line in Tetris awards you 50 points.<br>
+                - Each movement of the snake that increases its length awards 5 points.<br>
+                - Collecting power-ups can award or deduct points, depending on the type.
+            </p>
             <button class="closeModal" id="closeInstructions">Close</button>
+        </div>
+    </div>
+
+    <!-- Power-Ups Modal -->
+    <div id="powerUpsModal">
+        <div id="powerUpsContent">
+            <h2>Power-Ups</h2>
+            <ul>
+                <li><span style="color:#FFA500;">↑</span> Increase Snake Length by 20%</li>
+                <li><span style="color:#FF0000;">↓</span> Decrease Snake Length by 30%</li>
+                <li><span style="color:#FFFF00;">?</span> Random Effect (Increase or Decrease Snake Length)</li>
+                <li><span style="color:#008000;">⇄</span> Side Warp (Wrap around side walls)</li>
+                <li><span style="color:#00A000;">⇅</span> Vertical Warp (Wrap around top and bottom walls)</li>
+                <li><span style="color:#00C000;">⤡</span> Full Warp (Wrap around all walls)</li>
+                <li><span style="color:#FF69B4;">♥</span> Extra Life</li>
+            </ul>
+            <button class="closeModal" id="closePowerUps">Close</button>
         </div>
     </div>
 
@@ -465,13 +459,21 @@
             }
             tetrominoPlayer.pos.y = 0;
             tetrominoPlayer.pos.x = (gridWidth / 2 | 0) - (tetrominoPlayer.matrix[0].length / 2 | 0);
-            tetrominoPlayer.speed *= 0.95; // Increase speed by 5%
             drawNextTetromino();
 
             if (collide(grid, tetrominoPlayer)) {
-                gameOver = true;
-                updateScoreBoard();
-                alert('Game Over! Tetris block cannot be placed.');
+                if (lives > 1) {
+                    lives--;
+                    updateLivesDisplay();
+                    resetSnake();
+                    showAlert('You lost a life! Lives remaining: ' + lives);
+                } else {
+                    lives--;
+                    updateLivesDisplay();
+                    gameOver = true;
+                    updateScoreBoard();
+                    alert('Game Over! Tetris block cannot be placed. No lives remaining.');
+                }
             }
         }
 
@@ -489,6 +491,13 @@
         let fullWarpEndTime = 0;
         let powerUpDuration = 30000; // Power-up lasts 30 seconds
         let lastWarpPowerUpEndTime = 0; // Last time a warp effect ended
+        let lastExtraLifePowerUpTime = 0;
+
+        let lives = 3;
+        let paused = false;
+
+        let speedIncreaseInterval = 60000; // 1 minute
+        let nextSpeedIncreaseTime = Date.now() + speedIncreaseInterval;
 
         function resetGame() {
             grid = createMatrix(gridWidth, gridHeight);
@@ -507,6 +516,7 @@
             verticalWarpEndTime = 0;
             fullWarpEndTime = 0;
             lastWarpPowerUpEndTime = 0;
+            lastExtraLifePowerUpTime = 0;
             gameOver = false;
             lastTime = 0;
             dropCounter = 0;
@@ -517,12 +527,20 @@
                 'Survive 5 Minutes': false,
                 'Collect 10 Power-Ups': false,
                 'Clear 5 Lines': false,
-                'Reach Snake Length of 20': false
+                'Reach Snake Length of 20': false,
+                'Collect 20 Power-Ups': false,
+                'Clear 10 Lines': false,
+                'Score 500 Points': false,
+                'Snake Length 50': false
             };
             achievementsUnlocked = [];
             powerUpsCollected = 0;
             linesClearedTotal = 0;
             gameStartTime = Date.now();
+            paused = false;
+            lives = 3;
+            updateLivesDisplay();
+            nextSpeedIncreaseTime = Date.now() + speedIncreaseInterval;
             generatePowerUps();
             updateNextRewardDisplay();
             updateScoreDisplays();
@@ -550,6 +568,19 @@
 
         closeInstructions.addEventListener('click', () => {
             instructionsModal.style.display = 'none';
+        });
+
+        // Power-Ups Modal
+        const powerUpsButton = document.getElementById('powerUpsButton');
+        const powerUpsModal = document.getElementById('powerUpsModal');
+        const closePowerUps = document.getElementById('closePowerUps');
+
+        powerUpsButton.addEventListener('click', () => {
+            powerUpsModal.style.display = 'flex';
+        });
+
+        closePowerUps.addEventListener('click', () => {
+            powerUpsModal.style.display = 'none';
         });
 
         // Score Board Modal
@@ -639,7 +670,11 @@
             'Survive 5 Minutes': false,
             'Collect 10 Power-Ups': false,
             'Clear 5 Lines': false,
-            'Reach Snake Length of 20': false
+            'Reach Snake Length of 20': false,
+            'Collect 20 Power-Ups': false,
+            'Clear 10 Lines': false,
+            'Score 500 Points': false,
+            'Snake Length 50': false
         };
 
         let achievementsUnlocked = [];
@@ -648,7 +683,7 @@
         let gameStartTime = Date.now();
 
         document.addEventListener('keydown', event => {
-            if (gameOver) return;
+            if (gameOver || paused) return;
 
             const key = event.key.toLowerCase();
 
@@ -670,7 +705,7 @@
                         merge(grid, tetrominoPlayer);
                         tetrominoReset();
                         let linesCleared = sweep();
-                        tetrominoPlayer.score += linesCleared * 10;
+                        tetrominoPlayer.score += linesCleared * 50; // Increased points
                         updateScoreDisplays();
                         linesClearedTotal += linesCleared;
 
@@ -697,11 +732,13 @@
 
         canvas.addEventListener('mouseleave', () => {
             mouseInCanvas = false;
-            showAlert('Warning: Mouse pointer left the game area!');
+            paused = true;
+            showAlert('Game Paused: Mouse pointer left the game area!');
         });
 
         canvas.addEventListener('mouseenter', () => {
             mouseInCanvas = true;
+            paused = false;
             hideAlert();
         });
 
@@ -719,7 +756,7 @@
                 merge(grid, tetrominoPlayer);
                 tetrominoReset();
                 let linesCleared = sweep();
-                tetrominoPlayer.score += linesCleared * 10;
+                tetrominoPlayer.score += linesCleared * 50; // Increased points
                 updateScoreDisplays();
                 linesClearedTotal += linesCleared;
 
@@ -777,6 +814,12 @@
         });
 
         function update(time = 0) {
+            if (paused) {
+                draw();
+                requestAnimationFrame(update);
+                return;
+            }
+
             const deltaTime = time - lastTime;
             lastTime = time;
 
@@ -786,6 +829,16 @@
                 tetrominoDrop();
             }
 
+            if (Date.now() >= nextSpeedIncreaseTime) {
+                tetrominoPlayer.speed *= 0.9; // Increase speed by 10%
+                nextSpeedIncreaseTime += speedIncreaseInterval;
+                showAlert('Tetris speed increased by 10%!');
+            }
+
+            // Update countdown display
+            let timeUntilSpeedIncrease = Math.ceil((nextSpeedIncreaseTime - Date.now()) / 1000);
+            document.getElementById('speedIncreaseDisplay').textContent = `Next speed increase in: ${timeUntilSpeedIncrease}s`;
+
             snakeMoveCounter += deltaTime;
             if (snakeMoveCounter > snakeMoveInterval) {
                 snakeMoveCounter = 0;
@@ -794,7 +847,7 @@
                 const snakeHead = snake[0];
 
                 if (!mouseInCanvas) {
-                    showAlert('Warning: Mouse pointer left the game area!');
+                    showAlert('Game Paused: Mouse pointer left the game area!');
                 } else {
                     const targetX = Math.floor(mousePosition.x / blockSize);
                     const targetY = Math.floor(mousePosition.y / blockSize);
@@ -833,7 +886,7 @@
                     let dx = (newHead.x * blockSize + blockSize / 2) - mousePosition.x;
                     let dy = (newHead.y * blockSize + blockSize / 2) - mousePosition.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < blockSize * 3) { // Increased alert distance
+                    if (distance < blockSize * 3) {
                         showAlert('Warning: Snake is close to the mouse pointer!');
                     } else if (isNearCollision(newHead)) {
                         showAlert('Warning: Snake is near collision!');
@@ -845,23 +898,18 @@
                         (newHead.x < 0 || newHead.x >= gridWidth || newHead.y < 0 || newHead.y >= gridHeight) &&
                         !isFullWarpActive() && !isSideWarpActive() && !isVerticalWarpActive()
                     ) {
-                        gameOver = true;
-                        updateScoreBoard();
-                        alert('Game Over! Snake collision detected.');
+                        handleLifeLoss('Snake collision detected.');
                     } else if (
-                        grid[newHead.y][newHead.x] !== 0 ||
                         snakeCollision(newHead) ||
-                        tetrominoCollision(newHead)
+                        settledBlockCollision(newHead)
                     ) {
-                        gameOver = true;
-                        updateScoreBoard();
-                        alert('Game Over! Snake collision detected.');
+                        handleLifeLoss('Snake collision detected.');
                     } else {
                         snake.unshift(newHead);
                         if (snake.length > snakeLength) {
                             snake.pop();
                         } else {
-                            snakeScore += 1;
+                            snakeScore += 5; // Increased points
                             updateScoreDisplays();
                         }
                         checkPowerUpCollision(newHead);
@@ -880,6 +928,29 @@
             if (!gameOver) {
                 requestAnimationFrame(update);
             }
+        }
+
+        function handleLifeLoss(message) {
+            if (lives > 1) {
+                lives--;
+                updateLivesDisplay();
+                resetSnake();
+                showAlert(`You lost a life! ${message} Lives remaining: ${lives}`);
+            } else {
+                lives--;
+                updateLivesDisplay();
+                gameOver = true;
+                updateScoreBoard();
+                alert(`Game Over! ${message} No lives remaining.`);
+            }
+        }
+
+        function resetSnake() {
+            snake = [{ x: Math.floor(gridWidth / 2), y: gridHeight - 1 }];
+            snakeDirection = { x: 0, y: -1 };
+            snakeNewDirection = { x: 0, y: -1 };
+            snakeLength = 5;
+            livesLostDuringThisMove = true;
         }
 
         function isSideWarpActive() {
@@ -927,8 +998,7 @@
                     x >= gridWidth ||
                     y < 0 ||
                     y >= gridHeight ||
-                    grid[y][x] !== 0 ||
-                    tetrominoContainsCell(x, y)
+                    settledBlockAt(x, y)
                 ) {
                     return true;
                 }
@@ -958,33 +1028,35 @@
             return false;
         }
 
-        function tetrominoCollision(head) {
-            return tetrominoContainsCell(head.x, head.y);
+        function settledBlockAt(x, y) {
+            return grid[y][x] !== 0;
         }
 
-        function tetrominoContainsCell(x, y) {
-            const m = tetrominoPlayer.matrix;
-            const o = tetrominoPlayer.pos;
-            for (let i = 0; i < m.length; ++i) {
-                for (let j = 0; j < m[i].length; ++j) {
-                    if (m[i][j] !== 0 && x === j + o.x && y === i + o.y) {
-                        return true;
-                    }
-                }
+        function settledBlockCollision(head) {
+            if (livesLostDuringThisMove) {
+                livesLostDuringThisMove = false; // Reset flag
+                return false; // Allow passing through settled blocks immediately after life loss
             }
-            return false;
+            return settledBlockAt(head.x, head.y);
         }
+
+        let livesLostDuringThisMove = false;
 
         function collide(grid, player) {
             const m = player.matrix;
             const o = player.pos;
             for (let y = 0; y < m.length; ++y) {
                 for (let x = 0; x < m[y].length; ++x) {
-                    if (
-                        m[y][x] !== 0 &&
-                        (grid[y + o.y] && grid[y + o.y][x + o.x]) !== 0
-                    ) {
-                        return true;
+                    if (m[y][x] !== 0) {
+                        let gridY = y + o.y;
+                        let gridX = x + o.x;
+                        if (
+                            gridY >= gridHeight ||
+                            grid[gridY][gridX] !== 0 ||
+                            snake.some(segment => segment.x === gridX && segment.y === gridY)
+                        ) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -1003,30 +1075,32 @@
 
         function sweep() {
             let linesCleared = 0;
-            for (let y = grid.length - 1; y >= 0; --y) {
+            for (let y = grid.length - 1; y >= 0; y--) {
                 let x = 0;
-                while (x < grid[y].length) {
+                while (x < gridWidth) {
                     if (grid[y][x] !== 0) {
                         let runStart = x;
                         let runLength = 1;
-                        while (x + runLength < grid[y].length && grid[y][x + runLength] !== 0) {
+                        while (x + runLength < gridWidth && grid[y][x + runLength] !== 0) {
                             runLength++;
                         }
                         if (runLength >= 12) {
-                            // Remove blocks from x to x + runLength - 1
-                            for (let k = x; k < x + runLength; k++) {
-                                grid[y][k] = 0;
-                            }
-                            linesCleared++;
+                            // Remove the entire row
+                            grid.splice(y, 1);
+                            grid.unshift(new Array(gridWidth).fill(0));
 
                             // Remove any power-ups in the cleared line and relocate them
                             powerUps = powerUps.filter(powerUp => {
-                                if (powerUp.y === y && powerUp.x >= x && powerUp.x < x + runLength) {
+                                if (powerUp.y === y) {
                                     relocatePowerUp(powerUp);
                                     return false;
                                 }
                                 return true;
                             });
+
+                            linesCleared++;
+                            y++; // Recheck the same line as rows have shifted down
+                            break; // Exit the while loop and recheck the same y index
                         }
                         x += runLength;
                     } else {
@@ -1049,6 +1123,7 @@
                 ) {
                     powerUp.x = newX;
                     powerUp.y = newY;
+                    powerUp.spawnTime = Date.now();
                     newLocationFound = true;
                 }
             }
@@ -1063,7 +1138,7 @@
 
             drawGhostPiece(); // Draw ghost piece before current tetromino
 
-            // Draw Tetris blocks over power-ups
+            // Draw power-ups before Tetris blocks
             drawPowerUps();
             drawMatrix(tetrominoPlayer.matrix, tetrominoPlayer.pos, tetrominoPlayer.color);
 
@@ -1162,15 +1237,120 @@
 
         function drawPowerUps() {
             powerUps.forEach(powerUp => {
-                context.fillStyle = powerUp.color;
-                context.fillRect(powerUp.x * blockSize, powerUp.y * blockSize, blockSize, blockSize);
-                context.fillStyle = '#000';
-                context.font = '20px Arial';
-                context.textAlign = 'center';
-                context.textBaseline = 'middle';
-                context.fillText(powerUp.symbol, (powerUp.x + 0.5) * blockSize, (powerUp.y + 0.5) * blockSize);
+                const elapsedTime = Date.now() - powerUp.spawnTime;
+                if (elapsedTime >= 90000) {
+                    // Remove power-up and generate a new one
+                    powerUps.splice(powerUps.indexOf(powerUp), 1);
+                    generatePowerUps();
+                } else {
+                    // Handle fading
+                    let alpha = 1.0;
+                    if (elapsedTime >= 60000) {
+                        alpha = 1.0 - ((elapsedTime - 60000) / 30000); // Fade out over 30 seconds
+                    }
+
+                    context.globalAlpha = alpha;
+                    context.fillStyle = powerUp.color
+                    context.fillRect(powerUp.x * blockSize, powerUp.y * blockSize, blockSize, blockSize);
+                    context.fillStyle = '#000';
+                    context.font = '20px Arial';
+                    context.textAlign = 'center';
+                    context.textBaseline = 'middle';
+                    context.fillText(powerUp.symbol, (powerUp.x + 0.5) * blockSize, (powerUp.y + 0.5) * blockSize);
+                    context.globalAlpha = 1.0;
+                }
             });
         }
+
+        // Adjusted merge function to handle collision with the snake
+        function merge(grid, player) {
+            let collisionWithSnake = false;
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        let gridY = y + player.pos.y;
+                        let gridX = x + player.pos.x;
+                        grid[gridY][gridX] = value;
+                        if (snake.some(segment => segment.x === gridX && segment.y === gridY)) {
+                            collisionWithSnake = true;
+                        }
+                    }
+                });
+            });
+            if (collisionWithSnake) {
+                handleLifeLoss('Tetris block collided with the snake.');
+            }
+        }
+
+        // Update the collision function to exclude the snake from tetromino movement
+        function collide(grid, player) {
+            const m = player.matrix;
+            const o = player.pos;
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0) {
+                        let gridY = y + o.y; let
+                            gridX = x + o.x; if (gridY >= gridHeight ||
+                                grid[gridY][gridX] !== 0
+                        ) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Update the instructions content
+        document.getElementById('instructionsContent').innerHTML = `
+  <h2>Instructions</h2>
+  <p>
+    Welcome to SnakeTris! This game combines the classic games of Snake and Tetris into one exciting challenge.
+  </p>
+  <h3>Objective:</h3>
+  <p>
+    Survive as long as possible by controlling both the falling Tetris blocks and the Snake simultaneously.
+    Clear lines by filling rows with blocks and collect power-ups to enhance your snake.
+  </p>
+  <h3>Tetris Rules:</h3>
+  <p>
+    Use the keyboard controls to move and rotate the falling Tetris blocks. Fill rows with blocks to clear lines.
+    You need at least 12 consecutive blocks in a row to clear a line. The more lines you clear, the higher your score.
+    The Tetris blocks speed up every minute, increasing the challenge.
+  </p>
+  <h3>Snake Rules:</h3>
+  <p>
+    Control the snake using your mouse. The snake will follow your mouse pointer within the game area.
+    Avoid colliding with the walls, your own body, settled Tetris blocks, and falling Tetris blocks.
+    Collect power-ups to gain advantages, but be careful—some power-ups can have negative effects.
+  </p>
+  <h3>Power-Ups:</h3>
+  <p>
+    Various power-ups appear on the screen. Collect them to gain different effects.
+    Check the Power-Ups menu for a full list and explanations of each power-up.
+  </p>
+  <h3>Scoring:</h3>
+  <ul>
+    <li>Clearing a line in Tetris: 50 points per line.</li>
+    <li>Collecting a positive power-up: Varies (e.g., +10 points).</li>
+    <li>Collecting a negative power-up: May deduct points.</li>
+    <li>Snake grows longer: Earn points as the snake grows.</li>
+  </ul>
+  <h3>Controls:</h3>
+  <ul>
+    <li>Move Left: <span id="leftKeyDisplay">${leftKey.toUpperCase()}</span></li>
+    <li>Move Right: <span id="rightKeyDisplay">${rightKey.toUpperCase()}</span></li>
+    <li>Rotate Clockwise: <span id="rotateCWKeyDisplay">${rotateCWKey.toUpperCase()}</span></li>
+    <li>Rotate Counter-Clockwise: <span id="rotateCCWKeyDisplay">${rotateCCWKey.toUpperCase()}</span></li>
+    <li>Soft Drop: <span id="dropKeyDisplay">${dropKey.toUpperCase()}</span></li>
+  </ul>
+  <button class="closeModal" id="closeInstructions">Close</button>
+  `;
+
+        // Event listener for closing instructions modal
+        document.getElementById('closeInstructions').addEventListener('click', () => {
+            instructionsModal.style.display = 'none';
+        });
 
         // Draw Next Tetromino
         const nextBlockCanvas = document.getElementById('nextBlockCanvas');
@@ -1202,201 +1382,9 @@
             }
         }
 
-        // Power-Up Functions
-        function generatePowerUps() {
-            // Generate multiple power-ups
-            const currentTime = Date.now();
-            const types = [
-                { symbol: '↑', effect: 'increase', color: '#FFA500' }, // Orange
-                { symbol: '↓', effect: 'decrease', color: '#FF0000' }, // Red
-                { symbol: '?', effect: 'random', color: '#FFFF00' }    // Yellow
-            ];
-
-            // Warp Power-Ups, only one warp power-up can be on screen at a time
-            const warpTypes = [
-                { symbol: '⇄', effect: 'sideWarp', color: '#008000' }, // Green shades
-                { symbol: '⇅', effect: 'verticalWarp', color: '#00A000' },
-                { symbol: '⤡', effect: 'fullWarp', color: '#00C000' }
-            ];
-
-            // Check if warp power-up can be generated
-            let canGenerateWarp = false;
-            if (Date.now() - lastWarpPowerUpEndTime >= 90000 && !isWarpActive()) {
-                canGenerateWarp = !powerUps.some(p => warpTypes.some(wt => wt.effect === p.effect));
-            }
-
-            // Generate power-ups
-            powerUps = powerUps.filter(p => true); // Keep existing power-ups
-
-            let numberOfPowerUps = 5 - powerUps.length;
-            for (let i = 0; i < numberOfPowerUps; i++) {
-                let powerUp;
-                do {
-                    let powerUpType;
-                    if (canGenerateWarp && !powerUps.some(p => warpTypes.some(wt => wt.effect === p.effect))) {
-                        // Include a warp power-up
-                        powerUpType = warpTypes[Math.floor(Math.random() * warpTypes.length)];
-                        canGenerateWarp = false; // Only one warp power-up
-                    } else {
-                        // Include a regular power-up
-                        powerUpType = types[Math.floor(Math.random() * types.length)];
-                    }
-
-                    powerUp = {
-                        x: Math.floor(Math.random() * gridWidth),
-                        y: Math.floor(Math.random() * gridHeight),
-                        ...powerUpType
-                    };
-                } while (
-                    grid[powerUp.y][powerUp.x] !== 0 ||
-                    snake.some(segment => segment.x === powerUp.x && segment.y === powerUp.y) ||
-                    powerUps.some(p => p.x === powerUp.x && p.y === powerUp.y)
-                );
-                powerUps.push(powerUp);
-            }
-        }
-
-        function isWarpActive() {
-            return isSideWarpActive() || isVerticalWarpActive() || isFullWarpActive();
-        }
-
-        function checkPowerUpCollision(head) {
-            for (let i = 0; i < powerUps.length; i++) {
-                if (head.x === powerUps[i].x && head.y === powerUps[i].y) {
-                    applyPowerUp(powerUps[i]);
-                    powerUps.splice(i, 1);
-                    generatePowerUps();
-                    break;
-                }
-            }
-        }
-
-        function applyPowerUp(powerUp) {
-            if (powerUp.effect === 'increase') {
-                snakeLength = Math.ceil(snakeLength * 1.2);
-                snakeScore += 2;
-                updateScoreDisplays();
-                showAlert('Snake length increased by 20%! +2 points');
-            } else if (powerUp.effect === 'decrease') {
-                snakeLength = Math.floor(snakeLength * 0.7);
-                snakeScore -= 1;
-                updateScoreDisplays();
-                showAlert('Snake length decreased by 30%! -1 point');
-            } else if (powerUp.effect === 'random') {
-                const randomEffect = Math.random() < 0.5 ? 'increase' : 'decrease';
-                if (randomEffect === 'increase') {
-                    snakeLength = Math.ceil(snakeLength * 1.2);
-                    snakeScore += 2;
-                    updateScoreDisplays();
-                    showAlert('Snake length increased by 20%! +2 points');
-                } else {
-                    snakeLength = Math.floor(snakeLength * 0.7);
-                    snakeScore -= 1;
-                    updateScoreDisplays();
-                    showAlert('Snake length decreased by 30%! -1 point');
-                }
-            } else if (powerUp.effect === 'sideWarp') {
-                sideWarpEndTime = Date.now() + powerUpDuration;
-                lastWarpPowerUpEndTime = sideWarpEndTime;
-                showAlert('Side Warp Activated! Wrap around side walls.');
-            } else if (powerUp.effect === 'verticalWarp') {
-                verticalWarpEndTime = Date.now() + powerUpDuration;
-                lastWarpPowerUpEndTime = verticalWarpEndTime;
-                showAlert('Vertical Warp Activated! Wrap around top and bottom walls.');
-            } else if (powerUp.effect === 'fullWarp') {
-                fullWarpEndTime = Date.now() + powerUpDuration;
-                lastWarpPowerUpEndTime = fullWarpEndTime;
-                showAlert('Full Warp Activated! Wrap around all walls.');
-            }
-            powerUpsCollected++;
-            checkAchievements();
-        }
-
-        // Display Next Reward
-        const nextRewardDiv = document.getElementById('nextReward');
-
-        function updateNextRewardDisplay() {
-            const pendingAchievements = Object.keys(achievements).filter(a => !achievements[a]);
-            nextRewardDiv.textContent = pendingAchievements.length > 0 ? `Next Achievement: ${pendingAchievements[0]}` : 'All Achievements Unlocked!';
-        }
-
-        function updateScoreDisplays() {
-            document.getElementById('tetrisScore').textContent = `Tetris Score: ${tetrominoPlayer.score}`;
-            document.getElementById('snakeScore').textContent = `Snake Score: ${snakeScore}`;
-        }
-
-        function checkAchievements() {
-            if (linesClearedTotal >= 5 && !achievements['Clear 5 Lines']) {
-                achievements['Clear 5 Lines'] = true;
-                showAlert('Achievement Unlocked: Clear 5 Lines!');
-                updateNextRewardDisplay();
-            }
-            if (powerUpsCollected >= 10 && !achievements['Collect 10 Power-Ups']) {
-                achievements['Collect 10 Power-Ups'] = true;
-                showAlert('Achievement Unlocked: Collect 10 Power-Ups!');
-                updateNextRewardDisplay();
-            }
-            if (snakeLength >= 20 && !achievements['Reach Snake Length of 20']) {
-                achievements['Reach Snake Length of 20'] = true;
-                showAlert('Achievement Unlocked: Reach Snake Length of 20!');
-                updateNextRewardDisplay();
-            }
-            if (tetrominoPlayer.score >= 100 && !achievements['Score 100 Points']) {
-                achievements['Score 100 Points'] = true;
-                showAlert('Achievement Unlocked: Score 100 Points!');
-                updateNextRewardDisplay();
-            }
-            if (linesClearedTotal >= 1 && !achievements['First Line Clear']) {
-                achievements['First Line Clear'] = true;
-                showAlert('Achievement Unlocked: First Line Clear!');
-                updateNextRewardDisplay();
-            }
-        }
-
-        // Score Board Management (Local Storage Version)
-        function updateScoreBoard() {
-            const totalScore = tetrominoPlayer.score + snakeScore;
-            const dateTime = new Date().toLocaleString();
-
-            const newScore = { name: playerName, score: totalScore, dateTime: dateTime };
-
-            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
-            scores.push(newScore);
-
-            // Sort scores in descending order
-            scores.sort((a, b) => b.score - a.score);
-
-            // Keep only top 10 scores
-            scores = scores.slice(0, 10);
-
-            localStorage.setItem('tetrisSnakeScores', JSON.stringify(scores));
-        }
-
-        function loadScoreBoard() {
-            const scoreTableBody = document.querySelector('#scoreTable tbody');
-            scoreTableBody.innerHTML = ''; // Clear existing scores
-            let scores = JSON.parse(localStorage.getItem('tetrisSnakeScores')) || [];
-            scores.forEach(score => {
-                const newRow = document.createElement('tr');
-
-                const nameCell = document.createElement('td');
-                nameCell.textContent = score.name;
-                newRow.appendChild(nameCell);
-
-                const scoreCell = document.createElement('td');
-                scoreCell.textContent = score.score;
-                newRow.appendChild(scoreCell);
-
-                const dateCell = document.createElement('td');
-                dateCell.textContent = score.dateTime;
-                newRow.appendChild(dateCell);
-
-                scoreTableBody.appendChild(newRow);
-            });
-        }
-
         // Start the game when "Start Game" button is clicked
         // resetGame(); // Will be called when "Start Game" is clicked
+
     </script>
 </body>
 
