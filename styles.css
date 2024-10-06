@@ -1,0 +1,216 @@
+/* styles.css */
+/* General styles */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #222;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+#gameCanvas {
+  border: 1px solid #fff;
+  background-color: #000;
+  display: block;
+  margin: 0 auto;
+}
+
+#gameControls {
+  margin: 10px 0;
+}
+
+#gameControls input[type="text"] {
+  padding: 5px;
+  font-size: 16px;
+}
+
+#gameControls button {
+  margin: 5px;
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#scoreDisplays {
+  margin-top: 10px;
+}
+
+#scoreDisplays p {
+  margin: 5px 0;
+}
+
+#alertBox {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #ff4444;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  background-color: #333;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  color: #fff;
+  position: relative;
+}
+
+.close {
+  color: #aaa;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Responsive canvas */
+#gameCanvas {
+  max-width: 90%;
+  height: auto;
+}
+
+/* Responsive UI elements */
+@media screen and (max-width: 600px) {
+  #gameControls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #gameControls button {
+    margin: 10px 0;
+    width: 80%;
+  }
+
+  #scoreDisplays p {
+    font-size: 14px;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+}
+
+/* Adjustments for different screen sizes */
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+  #gameControls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #gameControls button {
+    margin: 10px;
+  }
+
+  #gameCanvas {
+    max-width: 70%;
+  }
+}
+
+/* Best practices for Tetris-like games */
+#gameCanvas {
+  image-rendering: pixelated;
+}
+
+/* Style for the orientation switch button */
+#orientationSwitch {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+}
+
+#orientationSwitch:hover {
+  background-color: #45a049;
+}
+
+/* Style for the alert box */
+#alertBox {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  left: 0;
+}
+
+/* Styles for modal content */
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-content ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.modal-content ul li {
+  margin: 5px 0;
+}
+
+.modal-content label {
+  display: inline-block;
+  width: 180px;
+  text-align: right;
+  margin-right: 10px;
+}
+
+.modal-content input[type="text"] {
+  width: 50px;
+  text-align: center;
+}
+
+.modal-content button {
+  margin-top: 10px;
+}
+
+/* Styles for the scoreboard table */
+#scoreTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#scoreTable th,
+#scoreTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+#scoreTable th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+#scoreTable tr:nth-child(even) {
+  background-color: #2f2f2f;
+}
+
+#scoreTable tr:hover {
+  background-color: #575757;
+}

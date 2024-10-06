@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SnakeTris</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="gameInfo">
+        <h1>SnakeTris</h1>
+        <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
+        <div>
+            <button id="restartButton">Start Game</button>
+            <button id="instructionsButton">Instructions</button>
+            <button id="powerUpsButton">Power-Ups</button>
+            <button id="scoreBoardButton">Leaderboard</button>
+            <button id="keyBindingsButton">Key Bindings</button>
+            <button id="achievementsButton">Achievements</button>
+        </div>
+    </div>
+
+    <div id="alertBox"></div>
+
+    <div id="gameContainer">
+        <div id="gameArea">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div id="sidebar">
+            <canvas id="nextBlockCanvas" width="120" height="120"></canvas>
+            <div id="scoreDisplay">
+                <p id="tetrisScore">Tetris Score: 0</p>
+                <p id="snakeScore">Snake Score: 0</p>
+                <p id="livesDisplay">Lives: 3/6</p>
+                <div id="warpTimeDisplay"></div>
+            </div>
+            <div id="snakeSpeedControl">
+                <label for="speedSlider">Snake Speed:</label><br>
+                <input type="range" id="speedSlider" min="0.25" max="8" step="0.25" value="0.8">
+                <span id="speedValue">0.8 blocks/sec</span>
+            </div>
+            <div id="speedIncreaseDisplay"></div>
+            <div id="nextReward">Next Achievement: First Line Clear</div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal">
+        <div id="instructionsContent">
+            <!-- Instructions will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Power-Ups Modal -->
+    <div id="powerUpsModal">
+        <div id="powerUpsContent">
+            <h2>Power-Ups</h2>
+            <ul>
+                <li><span style="color:#FFA500;">↑</span> Increase Snake Length by 20%</li>
+                <li><span style="color:#FF0000;">↓</span> Decrease Snake Length by 30%</li>
+                <li><span style="color:#FFFF00;">?</span> Random Effect (Could be any power-up effect)</li>
+                <li><span style="color:#008000;">⇄</span> Side Warp (Wrap around side walls)</li>
+                <li><span style="color:#00A000;">⇅</span> Vertical Warp (Wrap around top and bottom walls)</li>
+                <li><span style="color:#00C000;">⤡</span> Full Warp (Wrap around all walls)</li>
+                <li><span style="color:#FF69B4;">♥</span> Extra Life (Max 6 lives)</li>
+                <li><span style="color:#1E90FF;">2x</span> Double Points for 45 seconds</li>
+                <li><span style="color:#9400D3;">3x</span> Triple Points for 45 seconds</li>
+                <li><span style="color:#8B0000;">½x</span> Half Points for 45 seconds (Negative Effect)</li>
+            </ul>
+            <p>
+                When you collect a time-limited power-up, the snake changes color to indicate the effect is active. In
+                the last
+                10 seconds, the snake alternates colors every second as a countdown.
+            </p>
+            <button class="closeModal" id="closePowerUps">Close</button>
+        </div>
+    </div>
+
+    <!-- Score Board Modal -->
+    <div id="scoreBoardModal">
+        <div id="scoreBoardContent">
+            <h2>Leaderboard</h2>
+            <table id="scoreTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Scores will be populated here -->
+                </tbody>
+            </table>
+            <button class="closeModal" id="closeScoreBoard">Close</button>
+        </div>
+    </div>
+
+    <!-- Key Bindings Modal -->
+    <div id="keyBindingsModal">
+        <div id="keyBindingsContent">
+            <h2>Key Bindings</h2>
+            <label>Move Left: <input type="text" id="leftKey" maxlength="1" value="A"></label>
+            <label>Move Right: <input type="text" id="rightKey" maxlength="1" value="D"></label>
+            <label>Rotate Clockwise: <input type="text" id="rotateCWKey" maxlength="1" value="W"></label>
+            <label>Rotate Counter-clockwise: <input type="text" id="rotateCCWKey" maxlength="1" value="Q"></label>
+            <label>Soft Drop: <input type="text" id="dropKey" maxlength="1" value="S"></label>
+            <button id="saveKeyBindings">Save</button>
+            <button class="closeModal" id="closeKeyBindings">Close</button>
+        </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievementsModal">
+        <div id="achievementsContent">
+            <h2>Achievements</h2>
+            <ul id="achievementsList">
+                <!-- Achievements will be populated here -->
+            </ul>
+            <button class="closeModal" id="closeAchievements">Close</button>
+        </div>
+    </div>
+
+    <!-- Include the JavaScript files -->
+    <script src="gameSetup.js"></script> <!-- Contains game setup and initialization code -->
+    <script src="powerUps.js"></script> <!-- Contains power-ups definitions and functions -->
+    <script src="uiUpdates.js"></script> <!-- Contains code for updating UI elements and modals -->
+    <script src="eventHandlers.js"></script> <!-- Contains event listeners and user input handling -->
+    <script src="gameLogic.js"></script> <!-- Contains core game logic for Tetris and Snake -->
+
+</body>
+
+</html>
